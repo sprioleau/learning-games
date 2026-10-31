@@ -1,0 +1,7 @@
+node_modules
+.next
+.vercel
+.playwright-mcp
+convex/_generated
+package-lock.json
+public/assets

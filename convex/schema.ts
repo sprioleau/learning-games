@@ -1,0 +1,47 @@
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+export const optionsValidator = v.object({
+  version: v.literal(1),
+  wordSet: v.union(v.literal("starter"), v.literal("sight")),
+  hasWordHints: v.boolean(),
+  isSoundEnabled: v.boolean(),
+  isCelebrationEnabled: v.boolean(),
+  speechRate: v.union(v.literal("gentle"), v.literal("normal")),
+});
+export const sessionValidator = v.object({
+  version: v.literal(1),
+  id: v.string(),
+  gameId: v.literal("word-bingo"),
+  worldId: v.string(),
+  options: optionsValidator,
+  board: v.array(v.string()),
+  order: v.array(v.string()),
+  marked: v.array(v.string()),
+  cursor: v.number(),
+  phase: v.union(v.literal("playing"), v.literal("won")),
+  revision: v.number(),
+  createdAt: v.number(),
+  completedAt: v.union(v.number(), v.null()),
+});
+export default defineSchema({
+  players: defineTable({
+    keyHash: v.string(),
+    state: v.object({
+      version: v.literal(1),
+      stars: v.number(),
+      points: v.number(),
+      options: optionsValidator,
+      session: v.union(sessionValidator, v.null()),
+      results: v.array(
+        v.object({
+          sessionId: v.string(),
+          gameId: v.string(),
+          worldId: v.string(),
+          points: v.number(),
+          completedAt: v.number(),
+        }),
+      ),
+    }),
+  }).index("by_key", ["keyHash"]),
+});
