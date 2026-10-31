@@ -293,63 +293,71 @@ export function WordBingo() {
           )}
         </>
       )}
-      <Dialog
-        open={Boolean(isWinOpen)}
-        onOpenChange={(isOpen) => {
-          if (!isOpen && session) setDismissedWinId(session.id);
-        }}
-      >
-        <DialogContent
-          className={`win-scene-dialog ${options?.isCelebrationEnabled ? "" : "is-still"}`}
+      {isWinOpen && (
+        <Dialog
+          key={session?.id}
+          open
+          onOpenChange={(isOpen) => {
+            if (!isOpen && session) setDismissedWinId(session.id);
+          }}
         >
-          {options?.isCelebrationEnabled && isWinOpen && <Celebration />}
-          <div className="win-sunburst" aria-hidden="true" />
-          <div className="win-mascot floating-mascot">
-            <Mascot pose="cheer" />
-          </div>
-          <div className="celebration-ribbon">
-            <DialogTitle>Biiig bingo moment!</DialogTitle>
-          </div>
-          <div className="celebration-stars">
-            <RewardStars count={5} />
-          </div>
-          <div className="win-reward-card parchment-panel">
-            <span className="panel-eyebrow">GREAT JOB, EXPLORER!</span>
-            <DialogDescription>
-              You found five in a row.
-              <br />
-              One shiny new star, just for you.
-            </DialogDescription>
-            <div className="win-rewards">
-              <span>
-                <Image src={artwork.rewardStar} alt="" width={64} height={64} />
-                +1 star
-              </span>
-              <span>
-                <Sparkles />+{(session?.marked.length ?? 0) * 10 + 50} points
-              </span>
+          <DialogContent
+            className={`win-scene-dialog ${options?.isCelebrationEnabled ? "" : "is-still"}`}
+          >
+            {options?.isCelebrationEnabled && isWinOpen && <Celebration />}
+            <div className="win-sunburst" aria-hidden="true" />
+            <div className="win-mascot floating-mascot">
+              <Mascot pose="cheer" />
             </div>
-            <p>
-              {hasJustUnlockedWorld
-                ? "A new world is ready to explore!"
-                : nextWorld
-                  ? `${nextWorld.starsRequired - (state?.stars ?? 0)} more stars until your next world!`
-                  : "Every world is yours. Keep exploring!"}
-            </p>
-            <Button
-              className="play-button coral-button"
-              disabled={isBusy}
-              onClick={startNewGame}
-            >
-              <Play fill="currentColor" />
-              Play again
-            </Button>
-            <Link className="return-map-link" href="/">
-              Back to my adventure
-            </Link>
-          </div>
-        </DialogContent>
-      </Dialog>
+            <div className="celebration-ribbon">
+              <DialogTitle>Biiig bingo moment!</DialogTitle>
+            </div>
+            <div className="celebration-stars">
+              <RewardStars count={5} />
+            </div>
+            <div className="win-reward-card parchment-panel">
+              <span className="panel-eyebrow">GREAT JOB, EXPLORER!</span>
+              <DialogDescription>
+                You found five in a row.
+                <br />
+                One shiny new star, just for you.
+              </DialogDescription>
+              <div className="win-rewards">
+                <span>
+                  <Image
+                    src={artwork.rewardStar}
+                    alt=""
+                    width={64}
+                    height={64}
+                  />
+                  +1 star
+                </span>
+                <span>
+                  <Sparkles />+{(session?.marked.length ?? 0) * 10 + 50} points
+                </span>
+              </div>
+              <p>
+                {hasJustUnlockedWorld
+                  ? "A new world is ready to explore!"
+                  : nextWorld
+                    ? `${nextWorld.starsRequired - (state?.stars ?? 0)} more stars until your next world!`
+                    : "Every world is yours. Keep exploring!"}
+              </p>
+              <Button
+                className="play-button coral-button"
+                disabled={isBusy}
+                onClick={startNewGame}
+              >
+                <Play fill="currentColor" />
+                Play again
+              </Button>
+              <Link className="return-map-link" href="/">
+                Back to my adventure
+              </Link>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
       <Dialog open={isRestartOpen} onOpenChange={setIsRestartOpen}>
         <DialogContent className="story-dialog">
           <DialogTitle>A fresh board?</DialogTitle>

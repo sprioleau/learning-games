@@ -16,6 +16,7 @@ describe("password-protected demo coverage", () => {
       reducedMotion: "reduce",
     });
     const page = await context.newPage();
+    let activeCase = "login";
     try {
       await page.goto(`${baseURL}/admin`);
       await page.getByLabel("Password", { exact: true }).fill("wrong");
@@ -39,6 +40,7 @@ describe("password-protected demo coverage", () => {
       ).toBe(true);
       for (const wordSet of ["starter", "sight"] as const) {
         for (const world of worlds) {
+          activeCase = `${wordSet}:${world.id}`;
           await page
             .getByRole("button", {
               name: wordSet === "starter" ? "Starter words" : "Sight words",
@@ -59,7 +61,27 @@ describe("password-protected demo coverage", () => {
             const word = (await prompt.textContent())!;
             await board
               .getByRole("button", { name: word, exact: true })
-              .click();
+              .click({ timeout: 5000 })
+              .catch(async (failure) => {
+                const saved = await (
+                  await page.request.get(`${baseURL}/api/player`)
+                ).json();
+                console.log(
+                  JSON.stringify({
+                    activeCase,
+                    turn,
+                    word,
+                    url: page.url(),
+                    prompt: await prompt.textContent().catch(() => null),
+                    dialog: await page.getByRole("dialog").allTextContents(),
+                    session: saved.state.session,
+                  }),
+                );
+                await page.screenshot({
+                  path: ".playwright-mcp/admin-production-failure.png",
+                });
+                throw failure;
+              });
             await page.waitForFunction((previous) => {
               const current = document.querySelector(
                 '[aria-label="Word to find"]',
