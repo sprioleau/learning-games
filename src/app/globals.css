@@ -1705,3 +1705,18 @@ button.word-prompt:hover:enabled {
 .game-scene [data-slot="switch"][data-checked] [data-slot="switch-thumb"] {
   translate: 1.7cqw 0;
 }
+/* Decorative bingo cells stay square regardless of the star's intrinsic size. */
+.bingo-sign-icon {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+.bingo-sign-icon > span {
+  min-width: 0;
+  min-height: 0;
+}
+.bingo-sign-icon img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
