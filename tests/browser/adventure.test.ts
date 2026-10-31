@@ -90,13 +90,27 @@ describe("a complete learning adventure", () => {
       const target = await page
         .getByLabel("Word to find", { exact: true })
         .textContent();
-      const move = page.waitForResponse(
-        (response) =>
-          response.url().endsWith("/api/player") &&
-          response.request().method() === "POST",
-      );
-      await board.getByRole("button", { name: target!, exact: true }).click();
-      expect((await move).status()).toBe(200);
+      const [move] = await Promise.all([
+        page.waitForResponse(
+          (response) =>
+            response.url().endsWith("/api/player") &&
+            response.request().method() === "POST",
+        ),
+        board.getByRole("button", { name: target!, exact: true }).click(),
+      ]);
+      expect(move.status()).toBe(200);
+      const result = await move.json();
+      expect(["correct", "won"]).toContain(result.outcome);
+      if (result.outcome === "won") {
+        await page
+          .getByRole("dialog", { name: "Biiig bingo moment!" })
+          .waitFor();
+        break;
+      }
+      await page.waitForFunction((previousWord) => {
+        const prompt = document.querySelector('[aria-label="Word to find"]');
+        return prompt && prompt.textContent !== previousWord;
+      }, target);
     }
     await page.getByRole("dialog", { name: "Biiig bingo moment!" }).waitFor();
     expect(await page.getByText("+1 star", { exact: true }).isVisible()).toBe(
