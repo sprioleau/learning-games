@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useSceneContainer } from "@/components/scene/scene-context";
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { cn } from "@/lib/utils";
 
@@ -47,8 +48,9 @@ function DialogContent({
 }: DialogPrimitive.Popup.Props & {
   hasCloseButton?: boolean;
 }) {
+  const sceneContainer = useSceneContainer();
   return (
-    <DialogPortal>
+    <DialogPortal container={sceneContainer ?? undefined}>
       <DialogOverlay />
       <DialogPrimitive.Popup
         data-slot="dialog-content"

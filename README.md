@@ -15,7 +15,7 @@ Solo is playable. Multiplayer room and participant contracts are foundations for
 
 ## Stack
 
-Next.js App Router, React, TypeScript, Tailwind, shadcn/ui with Base UI accessibility primitives, Convex, Zod, Lucide, canvas-confetti, and self-hosted Fredoka/Nunito Sans fonts. Vitest runs rules, backend, UI, and real-browser tests. Playwright drives browsers; axe checks accessibility.
+Next.js App Router, React, TypeScript, Tailwind, shadcn/ui with Base UI accessibility primitives, Convex, Zod, Lucide, canvas-confetti, and self-hosted Baloo 2/Nunito Sans fonts. Vitest runs rules, backend, UI, and real-browser tests. Playwright drives browsers; axe checks accessibility.
 
 ## Develop
 
@@ -39,7 +39,7 @@ npm run dev
 
 `convex dev` configures your deployment and generates bindings. Keep it running while changing backend functions (`npm run dev:backend`). The helper generates a server-only secret and installs it in the selected development deployment. A project with no backend values runs with explicitly labeled device storage. A configured but unreachable backend produces a retryable error instead of switching storage silently.
 
-Anonymous progress is linked to an HTTP-only browser cookie. It persists across reloads but does not transfer between devices. Clearing cookies starts a new adventure. Browser speech synthesis requires an installed compatible voice; if speaking fails, the written prompt becomes visible.
+Anonymous progress is linked to an HTTP-only browser cookie. It persists across reloads but does not transfer between devices. Clearing cookies starts a new adventure. Browser speech synthesis prefers available natural or enhanced US-English voices and uses slower delivery at full volume. Both listening buttons repeat the word twice with a short pause. If speaking fails, the written prompt becomes visible.
 
 ## Verify
 
@@ -55,7 +55,7 @@ npx playwright install chromium
 npm run test:browser
 ```
 
-The real-browser suite verifies wrong-answer recovery, speech replay dispatch, saved boards, winning, retained rewards, mobile touch targets, and WCAG A/AA scans. Browser speech is stubbed only to observe the spoken text; check audible quality on real target devices.
+The real-browser suite verifies wrong-answer recovery, speech replay dispatch, saved boards, winning, retained rewards, fixed-aspect-ratio portrait/landscape scenes, modal containment, browser zoom across navigation, and WCAG A/AA scans. Browser speech is stubbed only to observe the spoken text; check audible quality on real target devices.
 
 ## Deploy
 
@@ -71,6 +71,10 @@ Vercel Git builds deploy the frontend only. After changing Convex functions or s
 ## Visual direction
 
 Reference boards are in `docs/design/references`. The selected character is the **explorer jellyfish**. The supplied artwork is organized in `public/assets/{branding,mascot,worlds,islands,rewards,icons}` and mapped in `src/lib/games/artwork.ts`. The reference collages stay separate from the accessible, live UI.
+
+The hub, adventure map, star collection, and bingo screens share a centered **16:9 game scene**. The supplied world background stays uncropped; portrait windows show the same composition with background above and below instead of rearranging the controls. Normal window resizing fits the scene to the available space. Browser zoom deliberately enlarges the entire scene, including art, text, controls, and dialogs; scrolling allows access to the enlarged content. Zooming out keeps the smaller scene centered horizontally and vertically. A full-screen control is available in the scene header.
+
+Jellyfish cutouts float gently within the illustrated world. Reduced-motion preferences disable the floating and celebration animations. Settings and confirmation dialogs retain Base UI focus handling and render inside the same game frame.
 
 ## Icons, manifest, and sharing
 

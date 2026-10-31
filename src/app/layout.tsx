@@ -7,9 +7,9 @@ const nunito = localFont({
   variable: "--font-nunito",
   display: "swap",
 });
-const fredoka = localFont({
-  src: "../../node_modules/@fontsource-variable/fredoka/files/fredoka-latin-wght-normal.woff2",
-  variable: "--font-fredoka",
+const baloo = localFont({
+  src: "../../node_modules/@fontsource-variable/baloo-2/files/baloo-2-latin-wght-normal.woff2",
+  variable: "--font-baloo",
   display: "swap",
 });
 export const viewport: Viewport = { themeColor: "#fff9ed" };
@@ -40,7 +40,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${nunito.variable} ${fredoka.variable}`}>
+    <html lang="en" className={`${nunito.variable} ${baloo.variable}`}>
       <body>
         <a className="skip-link" href="#main-content">
           Skip to main content

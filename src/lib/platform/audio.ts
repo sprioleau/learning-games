@@ -34,33 +34,158 @@ export function playSound(cue: SoundCue, isEnabled = true) {
       };
     });
   } catch {
-    /* Sound is an enhancement; unavailable audio must not interrupt play. */
+    /*
+      Sound is an enhancement; unavailable audio must not interrupt play.
+    */
   }
 }
+export type SpeechOptions = { repeatCount?: 1 | 2 };
+let playbackGeneration = 0;
+let cancelPendingSpeech: (() => void) | null = null;
+
+function getVoiceScore(voice: SpeechSynthesisVoice) {
+  const name = `${voice.name} ${voice.voiceURI}`;
+  let score = 0;
+  if (/natural|neural/i.test(name)) score += 100;
+  if (/enhanced|premium|siri/i.test(name)) score += 70;
+  if (
+    /google.*(?:us|american).*english|samantha|ava|allison|jenny|aria/i.test(
+      name,
+    )
+  )
+    score += 35;
+  if (voice.default) score += 5;
+  if (voice.localService) score += 1;
+  return score;
+}
+
+function selectVoice(voices: SpeechSynthesisVoice[]) {
+  const americanVoices = voices.filter(
+    (voice) => voice.lang.replaceAll("_", "-").toLowerCase() === "en-us",
+  );
+  const englishVoices = americanVoices.length
+    ? americanVoices
+    : voices.filter((voice) =>
+        /^en(?:-|$)/i.test(voice.lang.replaceAll("_", "-")),
+      );
+  return (
+    [...englishVoices].sort(
+      (first, second) => getVoiceScore(second) - getVoiceScore(first),
+    )[0] ?? null
+  );
+}
+
 export function speakWord(
   word: string,
   rate: "gentle" | "normal",
   onUnavailable?: () => void,
+  options: SpeechOptions = {},
 ) {
-  if (typeof window === "undefined" || !window.speechSynthesis) {
+  stopSpeaking();
+  if (
+    typeof window === "undefined" ||
+    !window.speechSynthesis ||
+    typeof SpeechSynthesisUtterance === "undefined"
+  ) {
     onUnavailable?.();
     return;
   }
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(word);
-  utterance.lang = "en-US";
-  utterance.rate = rate === "gentle" ? 0.75 : 0.95;
-  const voices = window.speechSynthesis.getVoices();
-  utterance.voice =
-    voices.find((voice) => voice.lang === "en-US" && voice.localService) ??
-    voices.find((voice) => voice.lang === "en-US") ??
-    null;
-  utterance.onerror = (event) => {
-    if (event.error !== "interrupted" && event.error !== "canceled")
-      onUnavailable?.();
-  };
-  window.speechSynthesis.speak(utterance);
+  const synthesis = window.speechSynthesis;
+  const generation = playbackGeneration;
+  const repeatCount = options.repeatCount === 2 ? 2 : 1;
+  let voicesTimeout: ReturnType<typeof setTimeout> | null = null;
+  let repeatTimeout: ReturnType<typeof setTimeout> | null = null;
+  let utterance: SpeechSynthesisUtterance | null = null;
+  let hasStarted = false;
+  let hasFailed = false;
+
+  function cleanup() {
+    if (voicesTimeout !== null) clearTimeout(voicesTimeout);
+    if (repeatTimeout !== null) clearTimeout(repeatTimeout);
+    synthesis.removeEventListener?.("voiceschanged", handleVoicesChanged);
+    if (utterance) {
+      utterance.onend = null;
+      utterance.onerror = null;
+    }
+    if (generation === playbackGeneration) cancelPendingSpeech = null;
+  }
+  function fail() {
+    if (generation !== playbackGeneration || hasFailed) return;
+    hasFailed = true;
+    cleanup();
+    onUnavailable?.();
+  }
+  function dispatch(remaining: number, voice: SpeechSynthesisVoice | null) {
+    if (generation !== playbackGeneration || hasFailed) return;
+    try {
+      utterance = new SpeechSynthesisUtterance(word);
+      utterance.lang = "en-US";
+      utterance.voice = voice;
+      utterance.rate = rate === "gentle" ? 0.7 : 0.85;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+      utterance.onerror = (event) => {
+        if (generation !== playbackGeneration) return;
+        if (event.error === "interrupted" || event.error === "canceled")
+          cleanup();
+        else fail();
+      };
+      utterance.onend = () => {
+        if (generation !== playbackGeneration) return;
+        if (remaining > 1)
+          repeatTimeout = setTimeout(() => dispatch(remaining - 1, voice), 400);
+        else cleanup();
+      };
+      synthesis.speak(utterance);
+    } catch {
+      fail();
+    }
+  }
+  function begin() {
+    if (hasStarted || generation !== playbackGeneration) return;
+    hasStarted = true;
+    if (voicesTimeout !== null) clearTimeout(voicesTimeout);
+    synthesis.removeEventListener?.("voiceschanged", handleVoicesChanged);
+    try {
+      dispatch(repeatCount, selectVoice(synthesis.getVoices()));
+    } catch {
+      fail();
+    }
+  }
+  function handleVoicesChanged() {
+    try {
+      if (synthesis.getVoices().length) begin();
+    } catch {
+      fail();
+    }
+  }
+  cancelPendingSpeech = cleanup;
+  try {
+    /*
+      Some browsers populate voices after the first render. Wait briefly for the
+      real voice list, then fall back to the platform's en-US voice if necessary.
+    */
+    if (
+      !synthesis.getVoices().length &&
+      typeof synthesis.addEventListener === "function"
+    ) {
+      synthesis.addEventListener("voiceschanged", handleVoicesChanged);
+      voicesTimeout = setTimeout(begin, 650);
+    } else begin();
+  } catch {
+    fail();
+  }
 }
+
 export function stopSpeaking() {
-  if (typeof window !== "undefined") window.speechSynthesis?.cancel();
+  playbackGeneration += 1;
+  cancelPendingSpeech?.();
+  cancelPendingSpeech = null;
+  try {
+    if (typeof window !== "undefined") window.speechSynthesis?.cancel();
+  } catch {
+    /*
+      A platform audio interruption must not prevent a new prompt or navigation.
+    */
+  }
 }

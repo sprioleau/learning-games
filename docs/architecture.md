@@ -9,8 +9,9 @@ The first slice is deliberately one complete solo game. Multiplayer has typed ro
 - `src/lib/games/worlds.ts`: declarative theme metadata. Jungle starts open, followed by desert at 5 stars, arctic at 10, city at 15, and ocean at 20. Themes change scenery and colors, not learning difficulty.
 - `src/lib/platform/progress.ts`: one star per completed session, ten points per correct word plus 50 for bingo. No penalties, daily streak pressure, or time limits. Completion IDs prevent duplicate rewards. The current session is the only playable session, so trimming score history to 100 cannot make an old session replayable.
 - `src/lib/platform/contracts.ts`: game registry, room and membership contracts, monotonic revisions, generic command envelope, and leaderboard entries. Future multiplayer should add a Convex subscription transport, private invite rooms, membership checks, host lifecycle, reconnect handling, and authoritative moves. There is no public matchmaking or chat.
+- `src/components/scene`: shared 16:9 scene frame, uncropped world backdrop, header controls, reward stars, and scene-local dialog portal context. The scene width store fits ordinary resize events but compensates for browser zoom relative to the initial device scale. Zoom persists across client navigation and permits scrolling rather than shrinking enlarged content back into the viewport.
 - `src/components/games`: reusable platform provider, settings dialog, personal leaderboard, normalized pointer canvas, confetti, and bingo presentation. Bingo uses semantic buttons instead of a canvas so words remain accessible.
-- `src/lib/platform/audio.ts`: browser speech synthesis and synthesized feedback cues. Speech replay is separate from effect muting. A speech failure shows the written prompt, and a grown-up can read it aloud. Real device audio must still be listened to during playtesting.
+- `src/lib/platform/audio.ts`: browser speech synthesis and synthesized feedback cues. Available natural/enhanced US-English voices are preferred; delayed voice lists are handled before falling back. Replay speaks twice, separated by a 400ms pause after completion. New prompts and navigation cancel pending playback. Speech replay is separate from effect muting. A speech failure shows the written prompt, and a grown-up can read it aloud. Real device audio must still be listened to during playtesting.
 - `src/lib/platform/use-game-timer.ts`: monotonic active-play time, pauses when inactive or hidden. Available for later games; bingo stays untimed.
 
 ## Anonymous identity and persistence
@@ -29,6 +30,8 @@ When no backend environment is configured, the same rules run with versioned dev
 
 Reference boards live in `docs/design/references`. They are visual references, not flattened UI images. `Brand` provides horizontal, stacked, compact, and light variants. The supplied illustrations are organized by purpose under `public/assets` and wired through `artwork.ts`. App icons use Next.js metadata files in `src/app`; `manifest.ts` generates the web-app manifest. `opengraph-image.tsx` and `twitter-image.tsx` generate matching 1200×630 social cards. The original asset inventory and prompts are preserved under `docs/design`. See `asset-brief.md` for exact delivery specs. All controls, text, paths, locks, counters, and rewards stay in code.
 
+Scenes use Baloo 2 headings and Nunito Sans body text. The reference-driven layout places the transparent jellyfish, game signs, island map, and parchment controls directly over the supplied background. Scene geometry remains 16:9 in portrait and landscape, with letterboxing around the centered frame. Floating mascots and celebration effects respect reduced motion. Base UI dialogs portal into the scene container, so their overlays, positions, and scaling follow the frame while keyboard focus and Escape dismissal remain accessible.
+
 ## Verification loop
 
 1. `npm run check`: TypeScript, ESLint, pure rules, Convex in-memory integration tests, and accessible UI behavior with Vitest.
@@ -41,7 +44,7 @@ Test accounts are anonymous browser contexts in the dev backend. The tests do no
 
 ## Next useful slices
 
-- Integrate standalone jellyfish and jungle art; test speech and touch on real iPad/Safari and Android hardware.
+- Test the supplied artwork, speech, browser zoom, and touch on real iPad/Safari and Android hardware.
 - Add curated, educator-reviewed word packs and recorded US-English prompts if consistent offline voices are needed. Browser speech currently varies by device and may use a platform voice service.
 - Add a second game using the same options, sessions, rewards, and theme contracts.
 - Implement private multiplayer as a focused slice, using per-player authenticated subscriptions and room authorization rather than exposing the current server secret to clients.

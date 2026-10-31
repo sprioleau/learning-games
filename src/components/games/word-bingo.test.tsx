@@ -11,6 +11,7 @@ import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 import { GameProvider } from "./game-provider";
 import { WordBingo } from "./word-bingo";
+import { speakWord } from "@/lib/platform/audio";
 import { createPlayerState } from "@/lib/platform/progress";
 import { createBingoSession } from "@/lib/games/bingo";
 import { defaultOptions } from "@/lib/games/options";
@@ -70,6 +71,29 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("the playable bingo experience", () => {
+  it("makes both listening controls repeat the current word twice", async () => {
+    const { session, user } = setup();
+    await screen.findByRole("button", { name: session.board[0] });
+    await user.click(
+      screen.getByRole("button", { name: "Hear the word again" }),
+    );
+    expect(speakWord).toHaveBeenLastCalledWith(
+      session.order[0],
+      "gentle",
+      expect.any(Function),
+      { repeatCount: 2 },
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Listen to the word" }),
+    );
+    expect(speakWord).toHaveBeenLastCalledWith(
+      session.order[0],
+      "gentle",
+      expect.any(Function),
+      { repeatCount: 2 },
+    );
+  });
+
   it("lets a child retry a wrong answer, finish a row, and retain the star after reload", async () => {
     const { session, user } = setup();
     const first = await screen.findByRole("button", { name: session.board[0] });

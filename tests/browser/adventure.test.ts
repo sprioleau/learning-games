@@ -116,7 +116,7 @@ describe("a complete learning adventure", () => {
     expect(errors).toEqual([]);
     await context.close();
   });
-  it("keeps a 5×5 board usable on a small phone without horizontal scrolling", async () => {
+  it("preserves the complete 16:9 scene on a portrait phone without cropping or reflow", async () => {
     const context = await browser.newContext({
       viewport: { width: 360, height: 800 },
       reducedMotion: "reduce",
@@ -139,14 +139,18 @@ describe("a complete learning adventure", () => {
     const board = page.getByLabel("Word board, five rows and five columns");
     await board.waitFor();
     expect(await board.getByRole("button").count()).toBe(25);
-    const sizes = await board.getByRole("button").evaluateAll((buttons) =>
-      buttons.map((button) => ({
-        width: button.getBoundingClientRect().width,
-        height: button.getBoundingClientRect().height,
-      })),
-    );
-    expect(sizes.every((size) => size.width >= 44 && size.height >= 44)).toBe(
-      true,
+    const scene = page.getByRole("main", { name: "Learning Games adventure" });
+    const bounds = await scene.boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds!.width / bounds!.height).toBeCloseTo(16 / 9, 2);
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.y).toBeCloseTo((800 - bounds!.height) / 2, 0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(360);
+    expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(800);
+    const boardBounds = await board.boundingBox();
+    expect(boardBounds!.x).toBeGreaterThan(bounds!.x);
+    expect(boardBounds!.y + boardBounds!.height).toBeLessThan(
+      bounds!.y + bounds!.height,
     );
     expect(
       await page.evaluate(
@@ -155,9 +159,183 @@ describe("a complete learning adventure", () => {
     ).toBe(true);
     await page.getByRole("button", { name: "Game options" }).click();
     expect(await page.getByRole("dialog").isVisible()).toBe(true);
+    const dialogBounds = await page.getByRole("dialog").boundingBox();
+    expect(dialogBounds!.x).toBeGreaterThanOrEqual(bounds!.x);
+    expect(dialogBounds!.y).toBeGreaterThanOrEqual(bounds!.y);
+    expect(dialogBounds!.x + dialogBounds!.width).toBeLessThanOrEqual(
+      bounds!.x + bounds!.width + 1,
+    );
+    expect(dialogBounds!.y + dialogBounds!.height).toBeLessThanOrEqual(
+      bounds!.y + bounds!.height + 1,
+    );
     await page.keyboard.press("Escape");
     await page.getByRole("dialog").waitFor({ state: "hidden" });
     expect(await page.getByRole("dialog").isVisible()).toBe(false);
     await context.close();
+  });
+  it("keeps the map, collection, and dialogs inside the same landscape scene", async () => {
+    const context = await browser.newContext({
+      viewport: { width: 1366, height: 768 },
+      reducedMotion: "reduce",
+    });
+    const page = await context.newPage();
+    try {
+      await page.goto(baseURL);
+      await page.getByRole("button", { name: "Game options" }).waitFor();
+      await page
+        .getByRole("button", { name: "Adventure map", exact: true })
+        .click();
+      const map = page.getByRole("region", {
+        name: "Adventure map",
+        exact: true,
+      });
+      expect(await map.getByRole("button").count()).toBe(5);
+      expect(
+        await page
+          .getByRole("heading", { name: "A world of discovery!" })
+          .isVisible(),
+      ).toBe(true);
+      await page.getByRole("button", { name: "My stars", exact: true }).click();
+      expect(
+        await page.getByRole("heading", { name: "My shiny stars" }).isVisible(),
+      ).toBe(true);
+      expect(
+        await page.getByText("stars collected", { exact: true }).isVisible(),
+      ).toBe(true);
+      await page
+        .getByRole("button", { name: "A note for grown-ups", exact: true })
+        .click();
+      await page
+        .getByRole("dialog", { name: "A little space to learn" })
+        .waitFor();
+      const scene = await page
+        .getByRole("main", { name: "Learning Games adventure" })
+        .boundingBox();
+      const dialog = await page.getByRole("dialog").boundingBox();
+      expect(scene!.width / scene!.height).toBeCloseTo(16 / 9, 2);
+      expect(dialog!.x).toBeGreaterThanOrEqual(scene!.x);
+      expect(dialog!.y).toBeGreaterThanOrEqual(scene!.y);
+      expect(dialog!.x + dialog!.width).toBeLessThanOrEqual(
+        scene!.x + scene!.width + 1,
+      );
+      expect(dialog!.y + dialog!.height).toBeLessThanOrEqual(
+        scene!.y + scene!.height + 1,
+      );
+      await page.keyboard.press("Escape");
+      await page.getByRole("dialog").waitFor({ state: "hidden" });
+      for (const viewport of [
+        { width: 800, height: 450 },
+        { width: 1280, height: 600 },
+      ]) {
+        await page.setViewportSize(viewport);
+        await page.waitForFunction(() => {
+          const main = document.querySelector("main")!;
+          const rect = main.getBoundingClientRect();
+          return rect.width <= innerWidth + 1 && rect.height <= innerHeight + 1;
+        });
+        const resized = await page
+          .getByRole("main", { name: "Learning Games adventure" })
+          .boundingBox();
+        expect(resized!.width / resized!.height).toBeCloseTo(16 / 9, 2);
+        expect(resized!.x).toBeCloseTo(
+          (viewport.width - resized!.width) / 2,
+          0,
+        );
+        expect(resized!.y).toBeCloseTo(
+          (viewport.height - resized!.height) / 2,
+          0,
+        );
+        expect(resized!.y).toBeGreaterThanOrEqual(-1);
+        expect(resized!.x + resized!.width).toBeLessThanOrEqual(
+          viewport.width + 1,
+        );
+        expect(resized!.y + resized!.height).toBeLessThanOrEqual(
+          viewport.height + 1,
+        );
+      }
+    } finally {
+      await context.close();
+    }
+  });
+  it("lets browser zoom enlarge the whole scene and preserves that scale when entering a game", async () => {
+    const context = await browser.newContext({
+      viewport: { width: 1280, height: 900 },
+      deviceScaleFactor: 1,
+      reducedMotion: "reduce",
+    });
+    const page = await context.newPage();
+    try {
+      await page.goto(baseURL);
+      await page
+        .getByRole("article")
+        .getByRole("button", { name: "Let’s play" })
+        .waitFor();
+      const scene = page.getByRole("main", {
+        name: "Learning Games adventure",
+      });
+      const original = (await scene.boundingBox())!;
+      const session = await context.newCDPSession(page);
+      await session.send("Emulation.setDeviceMetricsOverride", {
+        width: 640,
+        height: 450,
+        deviceScaleFactor: 2,
+        mobile: false,
+      });
+      await page.waitForFunction(
+        () => devicePixelRatio === 2 && innerWidth === 640,
+      );
+      const zoomed = (await scene.boundingBox())!;
+      expect(zoomed.width).toBeCloseTo(original.width, 0);
+      expect(zoomed.height).toBeCloseTo(original.height, 0);
+      expect(
+        await page.evaluate(
+          () => document.documentElement.scrollWidth > innerWidth,
+        ),
+      ).toBe(true);
+      await page
+        .getByRole("article")
+        .getByRole("button", { name: "Let’s play" })
+        .click();
+      await page
+        .getByRole("group", { name: "Word board, five rows and five columns" })
+        .waitFor();
+      const game = (await page
+        .getByRole("main", { name: "Learning Games adventure" })
+        .boundingBox())!;
+      expect(game.width).toBeCloseTo(original.width, 0);
+      expect(game.height).toBeCloseTo(original.height, 0);
+      await session.send("Emulation.setDeviceMetricsOverride", {
+        width: 2560,
+        height: 1800,
+        deviceScaleFactor: 0.5,
+        mobile: false,
+      });
+      await page.waitForFunction(
+        () => devicePixelRatio === 0.5 && innerWidth === 2560,
+      );
+      await page.evaluate(() => window.scrollTo(0, 0));
+      const zoomedOut = (await page
+        .getByRole("main", { name: "Learning Games adventure" })
+        .boundingBox())!;
+      expect(zoomedOut.width).toBeCloseTo(original.width, 0);
+      expect(zoomedOut.height).toBeCloseTo(original.height, 0);
+      expect(zoomedOut.x).toBeCloseTo((2560 - zoomedOut.width) / 2, 0);
+      expect(zoomedOut.y).toBeCloseTo((1800 - zoomedOut.height) / 2, 0);
+      await session.send("Emulation.clearDeviceMetricsOverride");
+      await page.setViewportSize({ width: 900, height: 600 });
+      await page.waitForFunction(
+        () =>
+          Math.abs(
+            document.querySelector("main")!.getBoundingClientRect().width - 900,
+          ) < 1,
+      );
+      const restored = (await page
+        .getByRole("main", { name: "Learning Games adventure" })
+        .boundingBox())!;
+      expect(restored.width).toBeCloseTo(900, 0);
+      expect(restored.width / restored.height).toBeCloseTo(16 / 9, 2);
+    } finally {
+      await context.close();
+    }
   });
 });

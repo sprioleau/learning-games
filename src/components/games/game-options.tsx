@@ -35,7 +35,7 @@ export function GameOptionsPanel() {
         onClick={openOptions}
       >
         <Settings2 size={20} />
-        <span className="desktop-label">Grown-up settings</span>
+        <span className="sr-only">Grown-up settings</span>
       </Button>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="options-dialog">

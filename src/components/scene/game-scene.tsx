@@ -1,0 +1,165 @@
+"use client";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowLeft, Maximize, Minimize } from "lucide-react";
+import { useSceneWidth } from "./use-scene-width";
+import { Button } from "@/components/ui/button";
+import { GameOptionsPanel } from "@/components/games/game-options";
+import { useGamePlatform } from "@/components/games/game-provider";
+import { Brand } from "@/components/hub/brand";
+import { artwork } from "@/lib/games/artwork";
+import type { WorldId } from "@/lib/games/worlds";
+import { useSceneContainer, SceneContainerContext } from "./scene-context";
+
+export function RewardStars({
+  count,
+  total = 5,
+}: {
+  count: number;
+  total?: number;
+}) {
+  return (
+    <span
+      className="reward-stars"
+      role="img"
+      aria-label={`${count} of ${total} stars`}
+    >
+      {Array.from({ length: total }, (_, index) => (
+        <Image
+          key={index}
+          src={artwork.rewardStar}
+          width={64}
+          height={64}
+          alt=""
+          className={index < count ? "is-earned" : "is-empty"}
+        />
+      ))}
+    </span>
+  );
+}
+export function GameScene({
+  children,
+  world = "jungle",
+  className = "",
+}: {
+  children: ReactNode;
+  world?: WorldId;
+  className?: string;
+}) {
+  const [container, setContainer] = useState<HTMLElement | null>(null);
+  const sceneWidth = useSceneWidth();
+  return (
+    <div className="scene-viewport">
+      <SceneContainerContext.Provider value={container}>
+        <main
+          id="main-content"
+          ref={setContainer}
+          className={`game-scene ${className}`}
+          style={
+            sceneWidth === null
+              ? undefined
+              : ({ "--scene-width": `${sceneWidth}px` } as CSSProperties)
+          }
+          tabIndex={-1}
+          aria-label="Learning Games adventure"
+        >
+          <Image
+            className="scene-background"
+            src={artwork.backgrounds[world]}
+            alt=""
+            fill
+            sizes="100vw"
+            preload
+          />
+          <div className="scene-vignette" aria-hidden="true" />
+          {children}
+        </main>
+      </SceneContainerContext.Provider>
+    </div>
+  );
+}
+export function SceneHeader({
+  title,
+  children,
+}: {
+  title?: string;
+  children?: ReactNode;
+}) {
+  const { state } = useGamePlatform();
+  const container = useSceneContainer();
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const hasPendingFullscreen = useRef(false);
+  useEffect(() => {
+    function syncFullscreen() {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    }
+    document.addEventListener("fullscreenchange", syncFullscreen);
+    const frame = window.requestAnimationFrame(syncFullscreen);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.removeEventListener("fullscreenchange", syncFullscreen);
+    };
+  }, []);
+  async function toggleFullscreen() {
+    if (hasPendingFullscreen.current) return;
+    hasPendingFullscreen.current = true;
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+      } else {
+        await container?.parentElement?.requestFullscreen();
+        setIsFullscreen(Boolean(document.fullscreenElement));
+      }
+    } catch {
+      setIsFullscreen(false);
+    } finally {
+      hasPendingFullscreen.current = false;
+    }
+  }
+  return (
+    <header className="scene-header">
+      {title ? (
+        <div className="scene-title-group">
+          <Link
+            href="/"
+            className="scene-icon-button back-button"
+            aria-label="All games"
+          >
+            <ArrowLeft />
+          </Link>
+          <h1 className="wooden-title">{title}</h1>
+        </div>
+      ) : (
+        <Brand variant="stacked" />
+      )}
+      {children}
+      <div className="scene-header-actions">
+        <span
+          className="star-counter"
+          role="img"
+          aria-label={`${state?.stars ?? 0} ${state?.stars === 1 ? "star" : "stars"}`}
+        >
+          <Image src={artwork.rewardStar} width={64} height={64} alt="" />
+          {state?.stars ?? 0}
+        </span>
+        <GameOptionsPanel />
+        <Button
+          variant="ghost"
+          className="scene-icon-button fullscreen-button"
+          aria-label={isFullscreen ? "Exit full screen" : "Full screen"}
+          onClick={toggleFullscreen}
+        >
+          {isFullscreen ? <Minimize /> : <Maximize />}
+        </Button>
+      </div>
+    </header>
+  );
+}
