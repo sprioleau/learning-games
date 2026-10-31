@@ -25,11 +25,14 @@ type CommandResponse = {
   state: PlayerState;
   outcome: MoveResult["outcome"] | null;
 };
+type MoveCommand = Extract<GameCommand, { kind: "move" }>;
 type GameContextValue = {
   state: PlayerState | null;
   storage: "cloud" | "device";
   isBusy: boolean;
+  isSavingMoves: boolean;
   error: string | null;
+  move: (word: string) => MoveResult | null;
   send: (command: GameCommand) => Promise<CommandResponse | null>;
   reload: () => Promise<void>;
 };
@@ -61,12 +64,26 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<PlayerState | null>(null);
   const [storage, setStorage] = useState<"cloud" | "device">("cloud");
   const [isBusy, setIsBusy] = useState(false);
+  const [isSavingMoves, setIsSavingMoves] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasPendingCommand = useRef(false);
+  const hasMoveDrain = useRef(false);
+  const pendingMoves = useRef<MoveCommand[]>([]);
+  const currentState = useRef<PlayerState | null>(null);
+  const confirmedState = useRef<PlayerState | null>(null);
+  function publishState(next: PlayerState) {
+    currentState.current = next;
+    setState(next);
+  }
+  function acceptState(next: PlayerState) {
+    confirmedState.current = next;
+    publishState(next);
+  }
   async function reload() {
+    if (hasPendingCommand.current || pendingMoves.current.length) return;
     try {
       const loaded = await loadPlayer();
-      setState(loaded.state);
+      acceptState(loaded.state);
       setStorage(loaded.storage);
       setError(null);
     } catch {
@@ -79,6 +96,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const controller = new AbortController();
     void loadPlayer(controller.signal)
       .then((loaded) => {
+        confirmedState.current = loaded.state;
+        currentState.current = loaded.state;
         setState(loaded.state);
         setStorage(loaded.storage);
       })
@@ -91,7 +110,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
     return () => controller.abort();
   }, []);
   async function send(command: GameCommand): Promise<CommandResponse | null> {
-    if (!state || hasPendingCommand.current) return null;
+    const state = currentState.current;
+    if (!state || hasPendingCommand.current || pendingMoves.current.length)
+      return null;
     hasPendingCommand.current = true;
     setIsBusy(true);
     setError(null);
@@ -140,7 +161,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         localStorage.setItem(storageKey, JSON.stringify(next));
         result = { state: next, outcome };
       }
-      setState(result.state);
+      acceptState(result.state);
       return result;
     } catch {
       setError(
@@ -152,9 +173,110 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setIsBusy(false);
     }
   }
+  async function drainMoves() {
+    if (hasMoveDrain.current) return;
+    hasMoveDrain.current = true;
+    try {
+      while (pendingMoves.current.length) {
+        const command = pendingMoves.current[0];
+        const response = await fetch("/api/player", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(command),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error("Move was not saved");
+        const saved = playerStateSchema.parse(data.state);
+        confirmedState.current = saved;
+        pendingMoves.current.shift();
+        let projected = saved;
+        let hasConflict = data.outcome !== "correct" && data.outcome !== "won";
+        for (const queued of pendingMoves.current) {
+          if (
+            !projected.session ||
+            projected.session.id !== queued.sessionId ||
+            projected.session.revision !== queued.expectedRevision
+          ) {
+            hasConflict = true;
+            break;
+          }
+          const predicted = applyBingoMove(projected.session, queued.word);
+          if (predicted.outcome !== "correct" && predicted.outcome !== "won") {
+            hasConflict = true;
+            break;
+          }
+          projected = { ...projected, session: predicted.session };
+        }
+        if (hasConflict) {
+          pendingMoves.current = [];
+          publishState(saved);
+          setError(
+            "Your saved board changed. We’ve restored it so you can keep playing.",
+          );
+          break;
+        }
+        publishState(projected);
+      }
+    } catch {
+      pendingMoves.current = [];
+      if (confirmedState.current) publishState(confirmedState.current);
+      setError(
+        "That didn’t save. Check your connection, then try again. Your last saved progress is safe.",
+      );
+    } finally {
+      hasMoveDrain.current = false;
+      setIsSavingMoves(false);
+      setIsBusy(false);
+    }
+  }
+  function move(word: string): MoveResult | null {
+    const state = currentState.current;
+    if (!state?.session || hasPendingCommand.current) return null;
+    const predicted = applyBingoMove(state.session, word);
+    if (predicted.outcome === "ignored" || predicted.outcome === "incorrect")
+      return predicted;
+    setError(null);
+    if (storage === "device") {
+      try {
+        const next = awardCompletion(state, predicted.session);
+        localStorage.setItem(storageKey, JSON.stringify(next));
+        acceptState(next);
+      } catch {
+        setError(
+          "That didn’t save. Check your connection, then try again. Your last saved progress is safe.",
+        );
+        return null;
+      }
+      return predicted;
+    }
+    /*
+      Only the session is predicted. Stars and rewards come from acknowledged
+      server state. Serialize writes while allowing the next word to be played.
+    */
+    pendingMoves.current.push({
+      kind: "move",
+      sessionId: state.session.id,
+      expectedRevision: state.session.revision,
+      word,
+    });
+    publishState({ ...state, session: predicted.session });
+    setIsSavingMoves(true);
+    setIsBusy(true);
+    void drainMoves();
+    return predicted;
+  }
   return (
     <GameContext.Provider
-      value={{ state, storage, isBusy, error, send, reload }}
+      value={{
+        state,
+        storage,
+        isBusy,
+        isSavingMoves,
+        error,
+        move,
+        send,
+        reload,
+      }}
     >
       {children}
     </GameContext.Provider>

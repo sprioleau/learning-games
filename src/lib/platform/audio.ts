@@ -2,37 +2,88 @@
 
 let audioContext: AudioContext | null = null;
 export type SoundCue = "correct" | "incorrect" | "win";
-export function playSound(cue: SoundCue, isEnabled = true) {
-  if (!isEnabled || typeof window === "undefined" || !window.AudioContext)
-    return;
+let soundBuffers: Record<SoundCue, AudioBuffer> | null = null;
+const soundNotes: Record<SoundCue, number[]> = {
+  correct: [523, 784],
+  incorrect: [260, 220],
+  win: [523, 659, 784, 1046],
+};
+
+function createSoundBuffer(context: AudioContext, cue: SoundCue) {
+  const notes = soundNotes[cue];
+  const duration = (notes.length - 1) * 0.12 + 0.25;
+  const buffer = context.createBuffer(
+    1,
+    Math.ceil(context.sampleRate * duration),
+    context.sampleRate,
+  );
+  const samples = buffer.getChannelData(0);
+  notes.forEach((frequency, index) => {
+    const start = Math.round(index * 0.12 * context.sampleRate);
+    const length = Math.ceil(0.25 * context.sampleRate);
+    for (
+      let sample = 0;
+      sample < length && start + sample < samples.length;
+      sample++
+    ) {
+      const elapsed = sample / context.sampleRate;
+      const envelope =
+        elapsed < 0.02
+          ? (0.12 * elapsed) / 0.02
+          : elapsed < 0.24
+            ? 0.12 *
+              Math.exp((Math.log(0.001 / 0.12) * (elapsed - 0.02)) / 0.22)
+            : (0.001 * (0.25 - elapsed)) / 0.01;
+      samples[start + sample] +=
+        Math.sin(2 * Math.PI * frequency * elapsed) * envelope;
+    }
+  });
+  return buffer;
+}
+
+/*
+  Prepare every effect once. Call this during the first play gesture to unlock
+  the audio device before gameplay. Later effects reuse these in-memory samples
+  without downloads, decoding, or synthesis on the interaction path.
+*/
+export function prepareGameAudio() {
+  if (typeof window === "undefined" || !window.AudioContext) return;
   try {
-    audioContext ??= new AudioContext();
-    const context = audioContext;
-    void context.resume().catch(() => undefined);
-    const notes =
-      cue === "win"
-        ? [523, 659, 784, 1046]
-        : cue === "correct"
-          ? [523, 784]
-          : [260, 220];
-    notes.forEach((frequency, index) => {
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      oscillator.type = "sine";
-      oscillator.frequency.value = frequency;
-      const start = context.currentTime + index * 0.12;
-      gain.gain.setValueAtTime(0, start);
-      gain.gain.linearRampToValueAtTime(0.12, start + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, start + 0.24);
-      oscillator.connect(gain);
-      gain.connect(context.destination);
-      oscillator.start(start);
-      oscillator.stop(start + 0.25);
-      oscillator.onended = () => {
-        oscillator.disconnect();
-        gain.disconnect();
+    if (!audioContext || audioContext.state === "closed") {
+      audioContext = new window.AudioContext();
+      soundBuffers = null;
+    }
+    if (!soundBuffers) {
+      soundBuffers = {
+        correct: createSoundBuffer(audioContext, "correct"),
+        incorrect: createSoundBuffer(audioContext, "incorrect"),
+        win: createSoundBuffer(audioContext, "win"),
       };
-    });
+    }
+    if (audioContext.state !== "running") {
+      void audioContext.resume().catch(() => undefined);
+    }
+  } catch {
+    /*
+      Unavailable audio must never interrupt a child's game.
+    */
+  }
+}
+
+export function playSound(cue: SoundCue, isEnabled = true) {
+  if (!isEnabled) return;
+  prepareGameAudio();
+  if (!audioContext || !soundBuffers) return;
+  try {
+    /*
+      Sources are single-use Web Audio players; only the lightweight player is
+      new per effect. The sound data and audio context stay cached.
+    */
+    const source = audioContext.createBufferSource();
+    source.buffer = soundBuffers[cue];
+    source.connect(audioContext.destination);
+    source.onended = () => source.disconnect();
+    source.start(audioContext.currentTime);
   } catch {
     /*
       Sound is an enhancement; unavailable audio must not interrupt play.

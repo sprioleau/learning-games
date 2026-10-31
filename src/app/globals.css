@@ -1520,3 +1520,25 @@ button.word-prompt {
 button.word-prompt:hover:enabled {
   background: #fff1cb;
 }
+/* The popup owns its close control; only this inner content region scrolls. */
+.game-scene [data-slot="dialog-content"].has-scrollable-content {
+  overflow: hidden;
+  padding: 0;
+}
+.dialog-scroll-content {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  padding: 2.7cqw;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2cqw;
+}
+.has-scrollable-content > [data-slot="dialog-close"] {
+  z-index: 2;
+}
+.dialog-scroll-content > [data-slot="dialog-title"] {
+  padding-right: 2cqw;
+}

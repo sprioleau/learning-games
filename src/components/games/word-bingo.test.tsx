@@ -1,6 +1,7 @@
 /* @vitest-environment jsdom */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  act,
   cleanup,
   render,
   screen,
@@ -11,11 +12,12 @@ import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom/vitest";
 import { GameProvider } from "./game-provider";
 import { WordBingo } from "./word-bingo";
-import { speakWord } from "@/lib/platform/audio";
-import { createPlayerState } from "@/lib/platform/progress";
-import { createBingoSession } from "@/lib/games/bingo";
+import { playSound, speakWord } from "@/lib/platform/audio";
+import { awardCompletion, createPlayerState } from "@/lib/platform/progress";
+import { applyBingoMove, createBingoSession } from "@/lib/games/bingo";
 import { defaultOptions } from "@/lib/games/options";
 vi.mock("@/lib/platform/audio", () => ({
+  prepareGameAudio: vi.fn(),
   playSound: vi.fn(),
   speakWord: vi.fn(),
   stopSpeaking: vi.fn(),
@@ -49,6 +51,7 @@ function setup() {
   return { session, user: userEvent.setup() };
 }
 beforeEach(() => {
+  vi.clearAllMocks();
   localStorage.clear();
   vi.stubGlobal(
     "fetch",
@@ -156,6 +159,111 @@ describe("the playable bingo experience", () => {
     expect(
       screen.getByRole("button", { name: session.board[0] }),
     ).toBeEnabled();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+});
+
+describe("cloud feedback before a save completes", () => {
+  function setupCloud(markedCount = 0) {
+    const state = createPlayerState();
+    state.options = {
+      ...defaultOptions,
+      hasWordHints: true,
+      isCelebrationEnabled: false,
+    };
+    const session = createBingoSession(
+      "cloud-session",
+      "jungle",
+      state.options,
+      () => 0.5,
+    );
+    session.order = [...session.board];
+    session.marked = session.board.slice(0, markedCount);
+    session.cursor = markedCount;
+    session.revision = markedCount;
+    state.session = session;
+    const replies: Array<(value: unknown) => void> = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn((_url, init) => {
+        if (init?.method === "POST")
+          return new Promise((resolve) => {
+            replies.push(resolve);
+          });
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ storage: "cloud", state }),
+        });
+      }),
+    );
+    render(
+      <GameProvider>
+        <WordBingo />
+      </GameProvider>,
+    );
+    return { state, session, replies, user: userEvent.setup() };
+  }
+  it("responds immediately, queues rapid correct answers, and confirms them without replaying sounds", async () => {
+    const { state, session, replies, user } = setupCloud();
+    await user.click(
+      await screen.findByRole("button", { name: session.board[0] }),
+    );
+    expect(
+      screen.getByRole("button", { name: session.board[0] }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(playSound).toHaveBeenLastCalledWith("correct", true);
+    await user.click(screen.getByRole("button", { name: session.board[1] }));
+    expect(
+      screen.getByRole("button", { name: session.board[1] }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(replies).toHaveLength(1);
+    const first = awardCompletion(
+      state,
+      applyBingoMove(session, session.board[0]).session,
+    );
+    await act(async () => {
+      replies[0]({
+        ok: true,
+        json: async () => ({ state: first, outcome: "correct" }),
+      });
+    });
+    await waitFor(() => expect(replies).toHaveLength(2));
+    expect(
+      screen.getByRole("button", { name: session.board[1] }),
+    ).toHaveAttribute("aria-pressed", "true");
+    const second = awardCompletion(
+      first,
+      applyBingoMove(first.session!, session.board[1]).session,
+    );
+    await act(async () => {
+      replies[1]({
+        ok: true,
+        json: async () => ({ state: second, outcome: "correct" }),
+      });
+    });
+    expect(playSound).toHaveBeenCalledTimes(2);
+  });
+  it("restores confirmed marks after a failed save and does not announce a saved star early", async () => {
+    const { session, replies, user } = setupCloud(4);
+    await user.click(
+      await screen.findByRole("button", { name: session.board[4] }),
+    );
+    expect(
+      screen.getByRole("button", { name: session.board[4] }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(screen.queryByText("Your star is saved.")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("0 stars")).toBeInTheDocument();
+    await act(async () => {
+      replies[0]({ ok: false, json: async () => ({ error: "Unavailable" }) });
+    });
+    expect(await screen.findByRole("alert")).toHaveTextContent("didn’t save");
+    expect(
+      screen.getByRole("button", { name: session.board[4] }),
+    ).toHaveAttribute("aria-pressed", "false");
+    expect(
+      screen.getByRole("button", { name: session.board[3] }),
+    ).toHaveAttribute("aria-pressed", "true");
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 });

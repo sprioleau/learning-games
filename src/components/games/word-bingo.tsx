@@ -20,11 +20,17 @@ import { Celebration } from "./celebration";
 import { artwork } from "@/lib/games/artwork";
 import { getWorld, worlds } from "@/lib/games/worlds";
 import { getWinningLine } from "@/lib/games/bingo";
-import { playSound, speakWord, stopSpeaking } from "@/lib/platform/audio";
+import {
+  prepareGameAudio,
+  playSound,
+  speakWord,
+  stopSpeaking,
+} from "@/lib/platform/audio";
 import { Mascot } from "@/components/hub/mascot";
 
 export function WordBingo() {
-  const { state, isBusy, error, send, reload } = useGamePlatform();
+  const { state, isBusy, isSavingMoves, error, move, send, reload } =
+    useGamePlatform();
   const [feedback, setFeedback] = useState<{
     message: string;
     word: string;
@@ -36,7 +42,8 @@ export function WordBingo() {
   const session = state?.session;
   const target = session?.order[session.cursor];
   const isPlaying = session?.phase === "playing";
-  const isWinOpen = session?.phase === "won" && dismissedWinId !== session.id;
+  const isWinOpen =
+    session?.phase === "won" && !isSavingMoves && dismissedWinId !== session.id;
   const world = getWorld(session?.worldId ?? "jungle");
   const nextWorld = worlds.find(
     (candidate) => candidate.starsRequired > (state?.stars ?? 0),
@@ -63,6 +70,7 @@ export function WordBingo() {
   }, [target, isPlaying, speechRate]);
   async function startNewGame() {
     if (!state) return;
+    prepareGameAudio();
     const result = await send({
       kind: "start",
       worldId: world.id,
@@ -74,14 +82,10 @@ export function WordBingo() {
       setDismissedWinId(null);
     }
   }
-  async function chooseWord(word: string) {
+  function chooseWord(word: string) {
     if (!session || !state) return;
-    const result = await send({
-      kind: "move",
-      sessionId: session.id,
-      expectedRevision: session.revision,
-      word,
-    });
+    prepareGameAudio();
+    const result = move(word);
     if (!result || result.outcome === "ignored") return;
     if (result.outcome === "incorrect") {
       setFeedback({
@@ -191,7 +195,7 @@ export function WordBingo() {
             className="word-prompt parchment-panel"
             aria-label="Listen to the word"
             onClick={repeatWord}
-            disabled={!isPlaying || isBusy}
+            disabled={!isPlaying || (isBusy && !isSavingMoves)}
           >
             <Volume2 aria-hidden="true" />
             <div>
@@ -229,7 +233,9 @@ export function WordBingo() {
                     className={`word-cell ${isMarked ? "is-marked" : ""} ${isWinningCell ? "is-winning" : ""} ${isIncorrect ? "is-incorrect" : ""}`}
                     aria-label={word}
                     aria-pressed={isMarked}
-                    disabled={isMarked || !isPlaying || isBusy}
+                    disabled={
+                      isMarked || !isPlaying || (isBusy && !isSavingMoves)
+                    }
                     onClick={() => void chooseWord(word)}
                   >
                     <span>{word}</span>
@@ -244,7 +250,7 @@ export function WordBingo() {
               className="hear-again-button"
               aria-label="Hear the word again"
               onClick={repeatWord}
-              disabled={!isPlaying || isBusy}
+              disabled={!isPlaying || (isBusy && !isSavingMoves)}
             >
               <Volume2 />
             </Button>
@@ -272,7 +278,7 @@ export function WordBingo() {
               : (feedback?.message ??
                 "Listen closely. Your next word is waiting!")}
           </div>
-          {session.phase === "won" && (
+          {session.phase === "won" && !isSavingMoves && (
             <div className="completed-banner parchment-panel">
               <strong>Your star is saved.</strong>
               <Button

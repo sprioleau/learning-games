@@ -173,3 +173,89 @@ describe("clear spoken word prompts", () => {
     expect(onUnavailable).toHaveBeenCalledOnce();
   });
 });
+
+class FakeSoundContext {
+  state: AudioContextState = "suspended";
+  sampleRate = 8000;
+  currentTime = 7;
+  destination = {};
+  createBuffer = vi.fn((_channels: number, length: number) => {
+    const samples = new Float32Array(length);
+    return { getChannelData: () => samples } as unknown as AudioBuffer;
+  });
+  createBufferSource = vi.fn(() => ({
+    buffer: null as AudioBuffer | null,
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+    start: vi.fn(),
+    onended: null as (() => void) | null,
+  }));
+  resume = vi.fn(async () => {
+    this.state = "running";
+  });
+}
+
+describe("prepared game sound effects", () => {
+  let soundApi: typeof import("./audio");
+  let contexts: FakeSoundContext[];
+  beforeEach(async () => {
+    vi.resetModules();
+    contexts = [];
+    vi.stubGlobal(
+      "AudioContext",
+      class extends FakeSoundContext {
+        constructor() {
+          super();
+          contexts.push(this);
+        }
+      },
+    );
+    soundApi = await import("./audio");
+  });
+  it("prepares all effects once and immediately reuses their samples with fresh players", () => {
+    soundApi.prepareGameAudio();
+    soundApi.prepareGameAudio();
+    expect(contexts).toHaveLength(1);
+    const context = contexts[0];
+    expect(context.createBuffer).toHaveBeenCalledTimes(3);
+    expect(context.resume).toHaveBeenCalledOnce();
+    soundApi.playSound("correct");
+    soundApi.playSound("incorrect");
+    soundApi.playSound("win");
+    soundApi.playSound("correct");
+    expect(context.createBuffer).toHaveBeenCalledTimes(3);
+    const players = context.createBufferSource.mock.results.map(
+      (result) => result.value,
+    );
+    expect(players).toHaveLength(4);
+    expect(players[0]).not.toBe(players[3]);
+    expect(players[0].buffer).toBe(players[3].buffer);
+    expect(
+      new Set(players.slice(0, 3).map((player) => player.buffer)).size,
+    ).toBe(3);
+    for (const player of players) {
+      expect(player.start).toHaveBeenCalledWith(7);
+      expect(
+        player.buffer!.getChannelData(0).some((sample: number) => sample !== 0),
+      ).toBe(true);
+      player.onended?.();
+      expect(player.disconnect).toHaveBeenCalledOnce();
+    }
+  });
+  it("does not initialize or play effects when muted", () => {
+    soundApi.playSound("correct", false);
+    expect(contexts).toHaveLength(0);
+    soundApi.prepareGameAudio();
+    soundApi.playSound("win", false);
+    expect(contexts[0].createBufferSource).not.toHaveBeenCalled();
+  });
+  it("rebuilds the cache only when the browser has closed its audio context", () => {
+    soundApi.prepareGameAudio();
+    contexts[0].state = "closed";
+    soundApi.playSound("correct");
+    expect(contexts).toHaveLength(2);
+    expect(contexts[1].createBuffer).toHaveBeenCalledTimes(3);
+    expect(contexts[1].createBufferSource).toHaveBeenCalledOnce();
+    expect(contexts[0].createBufferSource).not.toHaveBeenCalled();
+  });
+});

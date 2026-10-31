@@ -38,7 +38,7 @@ export function GameOptionsPanel() {
         <span className="sr-only">Grown-up settings</span>
       </Button>
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="options-dialog">
+        <DialogContent className="options-dialog" shouldScrollContent>
           <DialogTitle>Make play feel just right</DialogTitle>
           <DialogDescription>
             Word collection changes apply to the next board. Sound, hints, and

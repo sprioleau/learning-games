@@ -27,6 +27,7 @@ import {
   RewardStars,
 } from "@/components/scene/game-scene";
 import { worlds, type WorldId } from "@/lib/games/worlds";
+import { prepareGameAudio } from "@/lib/platform/audio";
 import { artwork } from "@/lib/games/artwork";
 import { Mascot } from "./mascot";
 
@@ -41,6 +42,7 @@ export function Hub() {
   const hasActiveSession = state?.session?.phase === "playing";
   async function startGame(worldId: WorldId = "jungle", shouldReplace = false) {
     if (!state) return;
+    prepareGameAudio();
     if (hasActiveSession && !shouldReplace) {
       if (state.session?.worldId === worldId) {
         router.push("/play/word-bingo");
@@ -138,6 +140,7 @@ export function Hub() {
                 className="play-button coral-button"
                 disabled={!state || isBusy}
                 onClick={() => {
+                  prepareGameAudio();
                   if (hasActiveSession) router.push("/play/word-bingo");
                   else void startGame();
                 }}
@@ -273,6 +276,7 @@ export function Hub() {
               className="play-button"
               disabled={!state || isBusy}
               onClick={() => {
+                prepareGameAudio();
                 if (hasActiveSession) router.push("/play/word-bingo");
                 else void startGame();
               }}
