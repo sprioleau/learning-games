@@ -1,6 +1,6 @@
 # Production artwork brief
 
-Primary reference: `public/assets/Explorer Jellyfish Learning Games Board.png`.
+Primary reference: `docs/design/references/Explorer Jellyfish Learning Games Board.png`.
 
 The mascot is a peach-and-pink explorer jellyfish with a translucent bell, large eyes, rosy cheeks, softly curling tentacles, tan safari hat, blue-lensed goggles, turquoise satchel, and gold compass. Never use the fox. Preserve proportions and accessories across poses.
 
@@ -21,4 +21,4 @@ Match the cheerful storybook reference: subtle paper texture, rounded forms, war
 
 Genuine SVG vector logo exports are preferred when the design tool supports them. Keep the wordmark as live code text for responsive composition and accessibility. Mascots need 10% clear padding and no background, ground plane, or detached shadow; retain internal translucency.
 
-Prioritize `mascot-wave.png` and `world-jungle.webp`. Update `src/lib/games/artwork.ts` when assets are supplied. Concept reference boards are intentionally not cut up into production sprites.
+All 18 supplied assets are now organized and integrated through `src/lib/games/artwork.ts`. The supplied inventory is retained at `docs/design/asset-inventory.json`. Concept reference boards are intentionally not cut up into production sprites.

@@ -70,4 +70,15 @@ Vercel Git builds deploy the frontend only. After changing Convex functions or s
 
 ## Visual direction
 
-Reference boards are in `public/assets`. The selected character is the **explorer jellyfish**. The current vector mascot and logo are temporary; standalone artwork plugs into `src/lib/games/artwork.ts`. The reference collages stay separate from the accessible, live UI.
+Reference boards are in `docs/design/references`. The selected character is the **explorer jellyfish**. The supplied artwork is organized in `public/assets/{branding,mascot,worlds,islands,rewards,icons}` and mapped in `src/lib/games/artwork.ts`. The reference collages stay separate from the accessible, live UI.
+
+## Icons, manifest, and sharing
+
+- `src/app/favicon.ico`: 16/32/48px favicon frames.
+- `src/app/icon.png`: 512px app icon.
+- `src/app/apple-icon.png`: opaque 180px Apple touch icon.
+- `src/app/manifest.ts`: browser web-app manifest, with 192px and 512px icons. This does not add offline support.
+- `src/app/opengraph-image.tsx` and `twitter-image.tsx`: matching 1200×630 cards composed from supplied artwork; Next.js generates their metadata tags.
+- `docs/design/asset-inventory.json`: supplied artwork inventory and checksums, distinct from the web-app manifest.
+
+Run `npm run assets:icons` after replacing `assets/branding/favicon-source.png`. Next.js handles icon and social image routes automatically. Update `metadataBase` in the root layout if the canonical domain changes.

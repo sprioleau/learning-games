@@ -27,7 +27,7 @@ When no backend environment is configured, the same rules run with versioned dev
 
 ## Visual assets
 
-Reference boards live in `public/assets`. They are visual references, not flattened UI images. `Brand` provides horizontal, stacked, compact, and light variants. The current star and jellyfish are temporary vectors, with an SVG browser icon. `artwork.ts` holds replacement paths for standalone supplied illustrations. See `asset-brief.md` for exact delivery specs. All controls, text, paths, locks, counters, and rewards stay in code.
+Reference boards live in `docs/design/references`. They are visual references, not flattened UI images. `Brand` provides horizontal, stacked, compact, and light variants. The supplied illustrations are organized by purpose under `public/assets` and wired through `artwork.ts`. App icons use Next.js metadata files in `src/app`; `manifest.ts` generates the web-app manifest. `opengraph-image.tsx` and `twitter-image.tsx` generate matching 1200×630 social cards. The original asset inventory and prompts are preserved under `docs/design`. See `asset-brief.md` for exact delivery specs. All controls, text, paths, locks, counters, and rewards stay in code.
 
 ## Verification loop
 

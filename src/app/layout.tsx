@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { GameProvider } from "@/components/games/game-provider";
 import "./globals.css";
@@ -12,7 +12,24 @@ const fredoka = localFont({
   variable: "--font-fredoka",
   display: "swap",
 });
+export const viewport: Viewport = { themeColor: "#fff9ed" };
 export const metadata: Metadata = {
+  metadataBase: new URL("https://learning-games-peach.vercel.app"),
+  applicationName: "Learning Games",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    siteName: "Learning Games",
+    title: "Learning Games — Little games. Big discoveries.",
+    description:
+      "Play Word Bingo, collect stars, and explore a world of learning. Ages 4–6. No login needed.",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Learning Games — Little games. Big discoveries.",
+    description:
+      "Play Word Bingo, collect stars, and explore a world of learning. Ages 4–6.",
+  },
   title: "Learning Games — Little games. Big discoveries.",
   description:
     "A playful learning adventure for curious kids ages 4–6. Listen, learn, and collect stars with Word Bingo. No login needed.",

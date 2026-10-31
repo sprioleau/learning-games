@@ -1,26 +1,28 @@
-/*
-  Replace nulls with public asset paths when the standalone artwork arrives.
-  Reference boards are deliberately not used as game backgrounds: they contain
-  baked-in controls and text. Rules and accessible UI stay independent of art.
-*/
-export const artwork: {
-  mascot: Record<"wave" | "cheer" | "think", string | null>;
-  backgrounds: Record<string, string | null>;
-  islands: Record<string, string | null>;
-} = {
-  mascot: { wave: null, cheer: null, think: null },
-  backgrounds: {
-    jungle: null,
-    desert: null,
-    arctic: null,
-    city: null,
-    ocean: null,
+import type { WorldId } from "./worlds";
+
+/* Keep asset URLs independent of rules and interactive, accessible UI. */
+export const artwork = {
+  logo: {
+    color: "/assets/branding/logo-mark.png",
+    dark: "/assets/branding/logo-mark-dark.png",
+    white: "/assets/branding/logo-mark-white.png",
   },
-  islands: {
-    jungle: null,
-    desert: null,
-    arctic: null,
-    city: null,
-    ocean: null,
+  rewardStar: "/assets/rewards/reward-star.png",
+  mascot: {
+    wave: "/assets/mascot/mascot-wave.png",
+    cheer: "/assets/mascot/mascot-cheer.png",
+    think: "/assets/mascot/mascot-think.png",
   },
+  backgrounds: Object.fromEntries(
+    ["jungle", "desert", "arctic", "city", "ocean"].map((world) => [
+      world,
+      `/assets/worlds/world-${world}.webp`,
+    ]),
+  ) as Record<WorldId, string>,
+  islands: Object.fromEntries(
+    ["jungle", "desert", "arctic", "city", "ocean"].map((world) => [
+      world,
+      `/assets/islands/island-${world}.png`,
+    ]),
+  ) as Record<WorldId, string>,
 };

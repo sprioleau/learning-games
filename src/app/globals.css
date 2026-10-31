@@ -2125,3 +2125,61 @@ h2 span {
 .sound-lines {
   color: #4a513d;
 }
+/* Generated artwork has transparent padding and keeps its original aspect ratio. */
+.hero-illustration .supplied-world-art {
+  width: 100%;
+  border-radius: inherit;
+}
+.supplied-world-mascot {
+  left: 24%;
+  width: 55%;
+}
+.world-emoji {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+}
+.world-emoji img {
+  width: 100%;
+  height: auto;
+}
+.win-mascot .mascot-image,
+.win-mascot img {
+  width: 100%;
+  height: auto;
+}
+.bingo-guide {
+  background: #fff9edee;
+  padding: 18px;
+  border-radius: 24px;
+}
+.game-feedback {
+  background: #fff7e6;
+}
+.game-footer {
+  color: #3e4d30 !important;
+  background: #fff9edeb;
+  border-radius: 12px;
+  padding: 14px 18px;
+  margin-top: 20px;
+}
+@media (max-width: 720px) {
+  .bingo-guide {
+    padding: 9px 14px;
+    width: max-content;
+    margin: 0 auto;
+  }
+  .game-heading > span {
+    color: #3e4d30 !important;
+  }
+  .game-header {
+    background: #fff9edf5;
+  }
+  .bingo-topline .new-board-button {
+    background: #fff9ed;
+  }
+  .game-footer {
+    font-size: 9px;
+  }
+}

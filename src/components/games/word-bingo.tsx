@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowLeft,
   ArrowRight,
@@ -360,7 +361,7 @@ export function WordBingo() {
             <Mascot pose="cheer" />
           </div>
           <div className="reward-star" aria-hidden="true">
-            <Star size={65} fill="currentColor" />
+            <Image src={artwork.rewardStar} alt="" width={90} height={90} />
           </div>
           <p className="eyebrow">A LITTLE WORD WONDER!</p>
           <DialogTitle>Biiig bingo moment!</DialogTitle>

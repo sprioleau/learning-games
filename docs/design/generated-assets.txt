@@ -1,0 +1,6 @@
+Learning Games production assets
+
+18 separate images. See asset-inventory.json for dimensions, alpha verification and SHA-256 checksums.
+PNG assets use genuine RGBA transparency with at least 10% padding. The brown (#352820) and white logo variants preserve the full-color logo alpha exactly.
+World backgrounds are opaque WebP files, exported at 2560x1440 from generated landscape masters.
+Artwork generated using the built-in image generation tool from the uploaded jellyfish reference. Prompt set included in generation-prompts.json.
