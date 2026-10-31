@@ -3,9 +3,10 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "../../../../convex/_generated/api";
+import { hasAdminAccess } from "@/lib/server/admin-session";
 import { commandSchema } from "@/lib/platform/commands";
 
-async function getIdentity() {
+async function getIdentity(isAdminMode: boolean) {
   const jar = await cookies();
   let token = jar.get("lg_player")?.value;
   if (!token || !/^[a-f0-9]{64}$/.test(token)) {
@@ -18,7 +19,9 @@ async function getIdentity() {
       maxAge: 60 * 60 * 24 * 365,
     });
   }
-  return createHash("sha256").update(token).digest("hex");
+  return createHash("sha256")
+    .update(isAdminMode ? `admin:${token}` : token)
+    .digest("hex");
 }
 function getBackend() {
   const url = process.env.NEXT_PUBLIC_CONVEX_URL;
@@ -27,16 +30,17 @@ function getBackend() {
   return { client: new ConvexHttpClient(url), secret };
 }
 export async function GET() {
+  const isAdminMode = await hasAdminAccess();
   const backend = getBackend();
-  if (!backend) return NextResponse.json({ storage: "device" });
+  if (!backend) return NextResponse.json({ storage: "device", isAdminMode });
   try {
-    const keyHash = await getIdentity();
+    const keyHash = await getIdentity(isAdminMode);
     const state = await backend.client.query(api.players.load, {
       secret: backend.secret,
       keyHash,
     });
     return NextResponse.json(
-      { storage: "cloud", state },
+      { storage: "cloud", state, isAdminMode },
       { headers: { "Cache-Control": "no-store" } },
     );
   } catch {
@@ -50,6 +54,7 @@ export async function POST(request: Request) {
   const origin = request.headers.get("origin");
   if (origin && origin !== new URL(request.url).origin)
     return NextResponse.json({ error: "Invalid origin" }, { status: 403 });
+  const isAdminMode = await hasAdminAccess();
   const backend = getBackend();
   if (!backend)
     return NextResponse.json(
@@ -63,16 +68,20 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   try {
-    const keyHash = await getIdentity();
+    const keyHash = await getIdentity(isAdminMode);
     const result = await backend.client.mutation(api.players.command, {
       keyHash,
       secret: backend.secret,
       command: JSON.stringify(input.data),
       sessionId: randomUUID(),
+      hasAdminAccess: isAdminMode,
     });
-    return NextResponse.json(result, {
-      headers: { "Cache-Control": "no-store" },
-    });
+    return NextResponse.json(
+      { ...result, isAdminMode },
+      {
+        headers: { "Cache-Control": "no-store" },
+      },
+    );
   } catch {
     return NextResponse.json(
       { error: "Your move could not be saved. Please try again." },

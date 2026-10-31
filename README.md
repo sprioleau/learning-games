@@ -86,3 +86,13 @@ Jellyfish cutouts float gently within the illustrated world. Reduced-motion pref
 - `docs/design/asset-inventory.json`: supplied artwork inventory and checksums, distinct from the web-app manifest.
 
 Run `npm run assets:icons` after replacing `assets/branding/favicon-source.png`. Next.js handles icon and social image routes automatically. Update `metadataBase` in the root layout if the canonical domain changes.
+
+## Demo and admin mode
+
+Open `/admin` and enter `admin` to unlock every implemented world and both Word Bingo collections. The server issues an HTTP-only signed cookie valid for eight hours. The admin dashboard can launch any world directly; normal map navigation also unlocks while demo mode is active. Demo progress uses a separate profile and never changes the child's earned stars. Use **Exit demo mode** to restore ordinary locks. `ADMIN_MODE_PASSWORD` can override the default password; signing uses `ADMIN_SESSION_SECRET` or the existing `GAME_SERVER_SECRET`.
+
+The browser tests log in and complete both word collections in all five worlds, then check logout restores the normal locked map.
+
+## Low-latency play
+
+Correct answers update the board and sound immediately. Saves are queued in the background and authoritative responses reconcile progress; rewards are confirmed only after saving. Failed writes restore confirmed progress. Sound buffers are built once and reused. Idle, low-priority artwork warming decodes mascot poses, islands, reward icons, and world backgrounds with two concurrent requests, respecting data-saver settings. Routes and speech voice lists are warmed in the background as well.

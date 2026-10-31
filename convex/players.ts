@@ -32,6 +32,7 @@ export const command = mutation({
     keyHash: v.string(),
     command: v.string(),
     sessionId: v.string(),
+    hasAdminAccess: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     authorize(args.secret);
@@ -44,7 +45,7 @@ export const command = mutation({
     let outcome: "correct" | "incorrect" | "won" | "ignored" | null = null;
     if (input.kind === "options") state = { ...state, options: input.options };
     if (input.kind === "start") {
-      if (!isWorldUnlocked(input.worldId, state.stars))
+      if (!args.hasAdminAccess && !isWorldUnlocked(input.worldId, state.stars))
         throw new Error("World locked");
       state = {
         ...state,

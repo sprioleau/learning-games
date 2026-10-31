@@ -33,7 +33,8 @@ import { Mascot } from "./mascot";
 
 export function Hub() {
   const router = useRouter();
-  const { state, storage, isBusy, error, send, reload } = useGamePlatform();
+  const { state, storage, isBusy, isAdminMode, error, send, reload } =
+    useGamePlatform();
   const [view, setView] = useState<"games" | "map" | "stars">("games");
   const [pendingWorld, setPendingWorld] = useState<WorldId | null>(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -171,7 +172,7 @@ export function Hub() {
               <path d="M200 150 C450 10 740 120 580 260 S40 280 200 430 S740 400 590 530 S240 520 400 705" />
             </svg>
             {worlds.map((world) => {
-              const isUnlocked = stars >= world.starsRequired;
+              const isUnlocked = isAdminMode || stars >= world.starsRequired;
               return (
                 <div
                   key={world.id}

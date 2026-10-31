@@ -1542,3 +1542,166 @@ button.word-prompt:hover:enabled {
 .dialog-scroll-content > [data-slot="dialog-title"] {
   padding-right: 2cqw;
 }
+.admin-mode-badge {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  font-size: 1cqw;
+  color: #49311e;
+  background: #ffdf80;
+  padding: 0.5cqw 0.8cqw;
+  border-radius: 1cqw;
+  box-shadow: 0 0.2cqw #ad7d31;
+}
+.admin-mascot {
+  position: absolute;
+  left: 0;
+  bottom: 4%;
+  width: 32%;
+}
+.admin-panel {
+  position: absolute;
+  left: 31%;
+  top: 20%;
+  width: 62%;
+  max-height: 71%;
+  overflow: auto;
+  padding: 2cqw;
+  text-align: center;
+}
+.admin-panel h1 {
+  font-size: 3cqw;
+  line-height: 1.1;
+}
+.admin-panel > p {
+  font-size: 1.1cqw;
+  margin: 0.7cqw 0;
+  color: #685033;
+}
+.admin-panel .panel-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5cqw;
+}
+.admin-panel .panel-eyebrow svg {
+  width: 1.4cqw;
+  height: 1.4cqw;
+}
+.admin-shield {
+  width: 3.5cqw;
+  height: 3.5cqw;
+  margin: 0 auto 1cqw;
+  color: #78552a;
+}
+.admin-panel form {
+  max-width: 30cqw;
+  margin: 1.5cqw auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1cqw;
+  text-align: left;
+}
+.admin-panel label {
+  font-size: 1.2cqw;
+  font-weight: 850;
+}
+.admin-panel input {
+  border: 0.15cqw solid #b68d55;
+  border-radius: 1cqw;
+  background: #fffcf2;
+  color: #352820;
+  font-size: 1.8cqw;
+  padding: 0.8cqw 1cqw;
+  outline-color: #7b4eb0;
+}
+.admin-panel form .play-button {
+  margin: 0.5cqw 0 0;
+  font-size: 1.5cqw !important;
+}
+.admin-panel .small-note {
+  font-size: 0.85cqw;
+}
+.admin-error {
+  color: #9c3529 !important;
+  font-weight: 800;
+}
+.admin-levels {
+  display: flex;
+  justify-content: center;
+  gap: 1cqw;
+  margin: 1cqw 0;
+}
+.admin-levels button {
+  height: auto;
+  padding: 0.5cqw 1cqw;
+  font-size: 1.2cqw;
+  border-radius: 1cqw;
+}
+.admin-levels button[aria-pressed="true"] {
+  background: #e7d5f5;
+  border-color: #8b65af;
+}
+.admin-world-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.6cqw;
+}
+.admin-world-grid > button {
+  height: auto;
+  padding: 0.3cqw;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25cqw;
+  background: #f8e6b7;
+  border: 0.1cqw solid #e1bf7e;
+  border-radius: 1cqw;
+  white-space: normal;
+}
+.admin-world-grid img {
+  width: 8cqw;
+  height: 8cqw;
+  object-fit: contain;
+}
+.admin-world-grid strong {
+  font-size: 1.4cqw;
+}
+.admin-world-grid span {
+  display: flex;
+  align-items: center;
+  gap: 0.3cqw;
+  font-size: 1cqw;
+}
+.admin-world-grid span svg {
+  width: 1cqw;
+  height: 1cqw;
+}
+.admin-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5cqw;
+  margin: 1.5cqw 0 0.6cqw;
+  font-size: 1.2cqw;
+}
+.admin-actions a,
+.admin-actions button {
+  padding: 0.5cqw 1cqw !important;
+  border-radius: 1cqw;
+  height: auto;
+  font-size: 1.1cqw;
+}
+/* Leave a visible inset around each settings switch handle in both states. */
+.game-scene [data-slot="switch"] {
+  width: 3.8cqw;
+  height: 2.1cqw;
+  padding: 0.25cqw;
+  border: 0;
+}
+.game-scene [data-slot="switch-thumb"] {
+  width: 1.6cqw;
+  height: 1.6cqw;
+  translate: 0 0;
+}
+.game-scene [data-slot="switch"][data-checked] [data-slot="switch-thumb"] {
+  translate: 1.7cqw 0;
+}

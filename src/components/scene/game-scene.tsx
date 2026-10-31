@@ -9,6 +9,8 @@ import {
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Maximize, Minimize } from "lucide-react";
+import { prepareGameAudio } from "@/lib/platform/audio";
+import { GameAssetWarmup } from "./game-asset-warmup";
 import { useSceneWidth } from "./use-scene-width";
 import { Button } from "@/components/ui/button";
 import { GameOptionsPanel } from "@/components/games/game-options";
@@ -69,6 +71,8 @@ export function GameScene({
           }
           tabIndex={-1}
           aria-label="Learning Games adventure"
+          onPointerDownCapture={prepareGameAudio}
+          onKeyDownCapture={prepareGameAudio}
         >
           <Image
             className="scene-background"
@@ -80,6 +84,7 @@ export function GameScene({
           />
           <div className="scene-vignette" aria-hidden="true" />
           {children}
+          <GameAssetWarmup world={world} />
         </main>
       </SceneContainerContext.Provider>
     </div>
@@ -92,7 +97,7 @@ export function SceneHeader({
   title?: string;
   children?: ReactNode;
 }) {
-  const { state } = useGamePlatform();
+  const { state, isAdminMode } = useGamePlatform();
   const container = useSceneContainer();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const hasPendingFullscreen = useRef(false);
@@ -142,6 +147,11 @@ export function SceneHeader({
       )}
       {children}
       <div className="scene-header-actions">
+        {isAdminMode && (
+          <Link href="/admin" className="admin-mode-badge">
+            Demo mode
+          </Link>
+        )}
         <span
           className="star-counter"
           role="img"

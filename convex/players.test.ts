@@ -9,6 +9,22 @@ function startCommand(worldId = "jungle") {
   return JSON.stringify({ kind: "start", worldId, options: defaultOptions });
 }
 describe("anonymous persisted sessions", () => {
+  it("lets a trusted admin start any world without manufacturing earned stars", async () => {
+    const t = app.createTest();
+    for (const worldId of ["jungle", "desert", "arctic", "city", "ocean"]) {
+      const result = await t.mutation(app.api.players.command, {
+        secret,
+        keyHash: "admin-player",
+        sessionId: `demo-${worldId}`,
+        hasAdminAccess: true,
+        command: startCommand(worldId),
+      });
+      expect(result.state.session?.worldId).toBe(worldId);
+      expect(result.state.stars).toBe(0);
+      expect(result.state.points).toBe(0);
+    }
+  });
+
   beforeEach(() => {
     vi.stubEnv("GAME_SERVER_SECRET", secret);
   });

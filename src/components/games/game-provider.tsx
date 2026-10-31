@@ -30,6 +30,7 @@ type GameContextValue = {
   state: PlayerState | null;
   storage: "cloud" | "device";
   isBusy: boolean;
+  isAdminMode: boolean;
   isSavingMoves: boolean;
   error: string | null;
   move: (word: string) => MoveResult | null;
@@ -38,15 +39,23 @@ type GameContextValue = {
 };
 const GameContext = createContext<GameContextValue | null>(null);
 const storageKey = "learning-games:player:v1";
-async function loadPlayer(
-  signal?: AbortSignal,
-): Promise<{ storage: "cloud" | "device"; state: PlayerState }> {
+async function loadPlayer(signal?: AbortSignal): Promise<{
+  storage: "cloud" | "device";
+  state: PlayerState;
+  isAdminMode: boolean;
+}> {
   const response = await fetch("/api/player", { cache: "no-store", signal });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error);
   if (data.storage === "cloud")
-    return { storage: "cloud", state: playerStateSchema.parse(data.state) };
-  const saved = localStorage.getItem(storageKey);
+    return {
+      storage: "cloud",
+      state: playerStateSchema.parse(data.state),
+      isAdminMode: Boolean(data.isAdminMode),
+    };
+  const saved = localStorage.getItem(
+    data.isAdminMode ? `${storageKey}:admin` : storageKey,
+  );
   let parsed;
   try {
     parsed = playerStateSchema.safeParse(
@@ -57,6 +66,7 @@ async function loadPlayer(
   }
   return {
     storage: "device",
+    isAdminMode: Boolean(data.isAdminMode),
     state: parsed.success ? parsed.data : createPlayerState(),
   };
 }
@@ -64,6 +74,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<PlayerState | null>(null);
   const [storage, setStorage] = useState<"cloud" | "device">("cloud");
   const [isBusy, setIsBusy] = useState(false);
+  const [isAdminMode, setIsAdminMode] = useState(false);
   const [isSavingMoves, setIsSavingMoves] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasPendingCommand = useRef(false);
@@ -85,6 +96,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       const loaded = await loadPlayer();
       acceptState(loaded.state);
       setStorage(loaded.storage);
+      setIsAdminMode(loaded.isAdminMode);
       setError(null);
     } catch {
       setError(
@@ -100,6 +112,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         currentState.current = loaded.state;
         setState(loaded.state);
         setStorage(loaded.storage);
+        setIsAdminMode(loaded.isAdminMode);
       })
       .catch(() => {
         if (!controller.signal.aborted)
@@ -137,7 +150,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         if (input.kind === "options")
           next = { ...state, options: input.options };
         if (input.kind === "start") {
-          if (!isWorldUnlocked(input.worldId, state.stars))
+          if (!isAdminMode && !isWorldUnlocked(input.worldId, state.stars))
             throw new Error("World locked");
           next = {
             ...state,
@@ -158,7 +171,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
           next = awardCompletion(state, move.session);
           outcome = move.outcome;
         }
-        localStorage.setItem(storageKey, JSON.stringify(next));
+        localStorage.setItem(
+          isAdminMode ? `${storageKey}:admin` : storageKey,
+          JSON.stringify(next),
+        );
         result = { state: next, outcome };
       }
       acceptState(result.state);
@@ -239,7 +255,10 @@ export function GameProvider({ children }: { children: ReactNode }) {
     if (storage === "device") {
       try {
         const next = awardCompletion(state, predicted.session);
-        localStorage.setItem(storageKey, JSON.stringify(next));
+        localStorage.setItem(
+          isAdminMode ? `${storageKey}:admin` : storageKey,
+          JSON.stringify(next),
+        );
         acceptState(next);
       } catch {
         setError(
@@ -271,6 +290,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         state,
         storage,
         isBusy,
+        isAdminMode,
         isSavingMoves,
         error,
         move,

@@ -16,6 +16,9 @@ import { playSound, speakWord } from "@/lib/platform/audio";
 import { awardCompletion, createPlayerState } from "@/lib/platform/progress";
 import { applyBingoMove, createBingoSession } from "@/lib/games/bingo";
 import { defaultOptions } from "@/lib/games/options";
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ prefetch: vi.fn() }),
+}));
 vi.mock("@/lib/platform/audio", () => ({
   prepareGameAudio: vi.fn(),
   playSound: vi.fn(),
