@@ -24,6 +24,20 @@ export const sessionValidator = v.object({
   createdAt: v.number(),
   completedAt: v.union(v.number(), v.null()),
 });
+export const matchingSessionValidator = v.object({
+  version: v.literal(1),
+  id: v.string(),
+  gameId: v.literal("card-matching"),
+  worldId: v.string(),
+  board: v.array(v.string()),
+  revealed: v.array(v.number()),
+  matched: v.array(v.number()),
+  moves: v.number(),
+  revision: v.number(),
+  phase: v.union(v.literal("playing"), v.literal("won")),
+  createdAt: v.number(),
+  completedAt: v.union(v.number(), v.null()),
+});
 export default defineSchema({
   players: defineTable({
     keyHash: v.string(),
@@ -33,6 +47,7 @@ export default defineSchema({
       points: v.number(),
       options: optionsValidator,
       session: v.union(sessionValidator, v.null()),
+      matchingSession: v.optional(v.union(matchingSessionValidator, v.null())),
       results: v.array(
         v.object({
           sessionId: v.string(),

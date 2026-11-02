@@ -1,9 +1,10 @@
 "use client";
 
 let audioContext: AudioContext | null = null;
-export type SoundCue = "correct" | "incorrect" | "win";
+export type SoundCue = "correct" | "incorrect" | "win" | "flip";
 let soundBuffers: Record<SoundCue, AudioBuffer> | null = null;
 const soundNotes: Record<SoundCue, number[]> = {
+  flip: [660],
   correct: [523, 784],
   incorrect: [260, 220],
   win: [523, 659, 784, 1046],
@@ -55,6 +56,7 @@ export function prepareGameAudio() {
     }
     if (!soundBuffers) {
       soundBuffers = {
+        flip: createSoundBuffer(audioContext, "flip"),
         correct: createSoundBuffer(audioContext, "correct"),
         incorrect: createSoundBuffer(audioContext, "incorrect"),
         win: createSoundBuffer(audioContext, "win"),

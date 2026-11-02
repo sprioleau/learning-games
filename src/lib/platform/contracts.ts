@@ -42,6 +42,14 @@ export type GameDefinition = {
 };
 export const gameRegistry: GameDefinition[] = [
   {
+    id: "card-matching",
+    title: "Picture Pairs",
+    minAge: 4,
+    maxAge: 10,
+    modes: ["solo"],
+    hasCanvas: false,
+  },
+  {
     id: "word-bingo",
     title: "Word Bingo",
     minAge: 4,

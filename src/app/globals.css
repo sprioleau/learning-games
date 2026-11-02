@@ -1720,3 +1720,274 @@ button.word-prompt:hover:enabled {
   max-height: 100%;
   object-fit: contain;
 }
+/* Picture-pair cards share the 16:9 scene and the supplied illustrations. */
+.matching-mascot {
+  position: absolute;
+  left: -3%;
+  bottom: 0;
+  width: 32%;
+  z-index: 3;
+}
+.matching-intro {
+  position: absolute;
+  left: 34%;
+  top: 27%;
+  width: 48%;
+  padding: 3cqw;
+  text-align: center;
+}
+.matching-intro h2 {
+  font-size: 3.1cqw;
+  line-height: 1.1;
+  margin: 1cqw 0;
+}
+.matching-intro p {
+  font-size: 1.4cqw;
+  margin: 1cqw 0 2cqw;
+}
+.matching-tip {
+  position: absolute;
+  left: 4%;
+  top: 23%;
+  width: 23%;
+  padding: 1.3cqw;
+  text-align: center;
+  z-index: 4;
+  transform: rotate(-3deg);
+}
+.matching-tip > strong {
+  font-size: 2.2cqw;
+  display: block;
+}
+.matching-tip > span {
+  display: block;
+  font-size: 1.1cqw;
+  font-weight: 800;
+}
+.matching-score {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5cqw;
+  margin: 0.7cqw 0 0.2cqw;
+}
+.matching-score img {
+  width: 3cqw;
+  height: 3cqw;
+}
+.matching-score strong {
+  font-size: 1.8cqw;
+}
+.matching-tip .matching-points {
+  font-size: 1.2cqw;
+  color: #705128;
+}
+.matching-board-frame {
+  position: absolute;
+  left: 31%;
+  top: 17%;
+  width: 62%;
+  height: 72%;
+  padding: 1cqw;
+  border: 0.25cqw solid #d9ae70;
+  border-radius: 2cqw;
+  background: #fff5dc;
+  box-shadow:
+    0 0.4cqw 0 #a8783e,
+    0 0.7cqw 0.8cqw #193b2d55;
+}
+.matching-board {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  gap: 0.7cqw;
+  width: 100%;
+  height: 100%;
+}
+.matching-card {
+  position: relative;
+  height: 100% !important;
+  min-height: 0 !important;
+  padding: 0.3cqw !important;
+  border: 0.2cqw solid #f5d796 !important;
+  border-radius: 1cqw !important;
+  background: linear-gradient(145deg, #a57bd5, #744cac) !important;
+  box-shadow: 0 0.2cqw 0 #603991;
+  opacity: 1 !important;
+  overflow: hidden;
+}
+.matching-card:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+.matching-card.is-revealed {
+  background: linear-gradient(#fffaf0, #ffedcb) !important;
+  border-color: #edc77d !important;
+  box-shadow: 0 0.2cqw 0 #bb9659;
+}
+.matching-card.is-matched {
+  background: #e1edc5 !important;
+  border-color: #a9c47c !important;
+}
+.matching-card-back {
+  font-size: 3.8cqw;
+  line-height: 1;
+  color: #ffe173;
+  text-shadow: 0 0.2cqw #9a6c2d;
+}
+.matching-card-face {
+  position: absolute;
+  inset: 0.3cqw;
+  display: grid;
+  place-items: center;
+}
+.matching-card-face > img {
+  width: 85%;
+  height: 85%;
+  object-fit: contain;
+}
+.matching-stars {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 76%;
+  height: 76%;
+  align-content: center;
+}
+.matching-stars img {
+  width: 38%;
+  height: auto;
+  object-fit: contain;
+}
+.matching-stars-1 img {
+  width: 70%;
+}
+.matching-stars-2 img {
+  width: 48%;
+}
+.matching-stars-4 img,
+.matching-stars-5 img {
+  width: 32%;
+}
+.matching-feedback {
+  position: absolute;
+  left: 31%;
+  top: 91%;
+  width: 62%;
+  padding: 0.4cqw;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5cqw;
+  font-size: 1.1cqw;
+  font-weight: 800;
+}
+.matching-feedback svg {
+  width: 1.3cqw;
+  height: 1.3cqw;
+}
+.matching-saved {
+  position: absolute;
+  left: 31%;
+  top: 90%;
+  width: 62%;
+  padding: 0.5cqw;
+  text-align: center;
+  font-size: 1.2cqw;
+  font-weight: 800;
+}
+.matching-saved .play-button {
+  font-size: 1.1cqw !important;
+  padding: 0.3cqw 1cqw !important;
+}
+.view-games .bingo-game-sign {
+  left: 25%;
+  width: 14.2%;
+  height: 36%;
+  top: 43%;
+}
+.view-games .bingo-game-sign h2 {
+  font-size: 2.15cqw;
+}
+.view-games .bingo-game-sign p {
+  font-size: 0.8cqw;
+}
+.view-games .bingo-game-sign .bingo-sign-icon {
+  width: 5.5cqw;
+  height: 5.5cqw;
+  gap: 0.2cqw;
+  padding: 0.4cqw;
+}
+.view-games .bingo-game-sign .bingo-sign-icon img {
+  width: 1.1cqw;
+  height: 1.1cqw;
+}
+.view-games .bingo-game-sign .play-button {
+  font-size: 1.3cqw !important;
+  gap: 0.5cqw !important;
+}
+.view-games .bingo-game-sign .play-button svg {
+  width: 1.3cqw !important;
+  height: 1.3cqw !important;
+}
+.matching-game-sign {
+  left: 40%;
+  background: linear-gradient(145deg, #d6bcfa, #a77bda 70%, #8958bc);
+  border-color: #f7e8ff;
+  box-shadow:
+    0 0.15cqw 0 0.2cqw #79529e,
+    0 0.7cqw 0.2cqw #7b522957,
+    inset 0 0 0 0.18cqw #af83d9;
+  transform: rotate(4deg);
+}
+.matching-game-sign .game-sign-kicker {
+  color: #563978;
+}
+.matching-sign-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3cqw;
+  margin: 1.2cqw 0 1cqw;
+  transform: rotate(-8deg);
+}
+.matching-sign-icon span {
+  display: grid;
+  place-items: center;
+  width: 2.5cqw;
+  height: 3.2cqw;
+  background: #fff2d5;
+  border: 0.18cqw solid #e9ca8d;
+  border-radius: 0.5cqw;
+  box-shadow: 0 0.2cqw #775194;
+}
+.matching-sign-icon img {
+  width: 1.8cqw;
+  height: 1.8cqw;
+}
+.matching-game-sign h2,
+.matching-game-sign p {
+  color: #fff8ee;
+  text-shadow: 0 0.15cqw #66418c;
+}
+.matching-world-choice {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.4cqw;
+  margin: 0.8cqw 0;
+}
+.matching-world-choice button {
+  height: auto;
+  min-height: 0;
+  padding: 0.35cqw 0.7cqw;
+  font-size: 1.1cqw;
+  border-radius: 0.8cqw;
+  background: #fff8e9;
+  border: 0.1cqw solid #c9a773;
+}
+.matching-world-choice button[aria-pressed="true"] {
+  background: #eddafa;
+  border-color: #8058ad;
+  color: #52367b;
+}

@@ -217,13 +217,13 @@ describe("prepared game sound effects", () => {
     soundApi.prepareGameAudio();
     expect(contexts).toHaveLength(1);
     const context = contexts[0];
-    expect(context.createBuffer).toHaveBeenCalledTimes(3);
+    expect(context.createBuffer).toHaveBeenCalledTimes(4);
     expect(context.resume).toHaveBeenCalledOnce();
     soundApi.playSound("correct");
     soundApi.playSound("incorrect");
     soundApi.playSound("win");
     soundApi.playSound("correct");
-    expect(context.createBuffer).toHaveBeenCalledTimes(3);
+    expect(context.createBuffer).toHaveBeenCalledTimes(4);
     const players = context.createBufferSource.mock.results.map(
       (result) => result.value,
     );
@@ -254,7 +254,7 @@ describe("prepared game sound effects", () => {
     contexts[0].state = "closed";
     soundApi.playSound("correct");
     expect(contexts).toHaveLength(2);
-    expect(contexts[1].createBuffer).toHaveBeenCalledTimes(3);
+    expect(contexts[1].createBuffer).toHaveBeenCalledTimes(4);
     expect(contexts[1].createBufferSource).toHaveBeenCalledOnce();
     expect(contexts[0].createBufferSource).not.toHaveBeenCalled();
   });

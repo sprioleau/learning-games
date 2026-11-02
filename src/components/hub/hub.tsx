@@ -161,6 +161,46 @@ export function Hub() {
               </span>
             </article>
           )}
+          {view === "games" && (
+            <article className="bingo-game-sign matching-game-sign">
+              <span className="game-sign-kicker">A MEMORY ADVENTURE</span>
+              <div className="matching-sign-icon" aria-hidden="true">
+                <span>
+                  <Image
+                    src={artwork.rewardStar}
+                    alt=""
+                    width={64}
+                    height={64}
+                  />
+                </span>
+                <span>
+                  <Image
+                    src={artwork.rewardStar}
+                    alt=""
+                    width={64}
+                    height={64}
+                  />
+                </span>
+              </div>
+              <h2>Picture Pairs</h2>
+              <p>Flip, remember, match!</p>
+              <Button
+                className="play-button"
+                aria-label="Play Picture Pairs"
+                disabled={!state || isBusy}
+                onClick={() => {
+                  prepareGameAudio();
+                  router.push("/play/card-matching");
+                }}
+              >
+                <Play fill="currentColor" />
+                Play
+              </Button>
+              <span className="sign-spark spark-one" aria-hidden="true">
+                ✦
+              </span>
+            </article>
+          )}
           <section className="adventure-map" aria-label="Adventure map">
             <h2 className="sr-only">Your adventure map</h2>
             <svg
@@ -268,7 +308,10 @@ export function Hub() {
             <Leaderboard
               entries={(state?.results ?? []).map((result) => ({
                 id: result.sessionId,
-                label: "Word Bingo",
+                label:
+                  result.gameId === "card-matching"
+                    ? "Picture Pairs"
+                    : "Word Bingo",
                 points: result.points,
                 completedAt: result.completedAt,
               }))}

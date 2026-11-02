@@ -127,3 +127,64 @@ describe("anonymous persisted sessions", () => {
     expect(duplicate.state.points).toBe(result.state.points);
   });
 });
+
+describe("persisted picture matching", () => {
+  it("resumes matched cards, preserves bingo, and awards a completed game only once", async () => {
+    const t = app.createTest();
+    vi.stubEnv("GAME_SERVER_SECRET", secret);
+    const bingo = await t.mutation(app.api.players.command, {
+      secret,
+      keyHash: "pair-player",
+      sessionId: "bingo-game",
+      command: JSON.stringify({
+        kind: "start",
+        worldId: "jungle",
+        options: defaultOptions,
+      }),
+    });
+    let result = await t.mutation(app.api.players.command, {
+      secret,
+      keyHash: "pair-player",
+      sessionId: "pair-game",
+      command: JSON.stringify({ kind: "matching-start", worldId: "jungle" }),
+    });
+    let lastCommand = "";
+    for (const face of new Set(result.state.matchingSession!.board)) {
+      const session = result.state.matchingSession!;
+      const pair = session.board.flatMap((item, index) =>
+        item === face ? [index] : [],
+      );
+      for (const index of pair) {
+        const current = result.state.matchingSession!;
+        lastCommand = JSON.stringify({
+          kind: "matching-flip",
+          sessionId: current.id,
+          expectedRevision: current.revision,
+          index,
+        });
+        result = await t.mutation(app.api.players.command, {
+          secret,
+          keyHash: "pair-player",
+          sessionId: "unused",
+          command: lastCommand,
+        });
+      }
+    }
+    expect(result.state.matchingSession?.phase).toBe("won");
+    expect(result.state.session).toEqual(bingo.state.session);
+    expect(result.state.stars).toBe(1);
+    expect(result.state.points).toBe(100);
+    expect(
+      (await t.query(app.api.players.load, { secret, keyHash: "pair-player" }))
+        .matchingSession,
+    ).toEqual(result.state.matchingSession);
+    const retried = await t.mutation(app.api.players.command, {
+      secret,
+      keyHash: "pair-player",
+      sessionId: "unused",
+      command: lastCommand,
+    });
+    expect(retried.outcome).toBe("ignored");
+    expect(retried.state.stars).toBe(1);
+  });
+});

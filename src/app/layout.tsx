@@ -14,7 +14,7 @@ const baloo = localFont({
 });
 export const viewport: Viewport = { themeColor: "#fff9ed" };
 export const metadata: Metadata = {
-  metadataBase: new URL("https://learning-games-peach.vercel.app"),
+  metadataBase: new URL("https://sp-learning-games.vercel.app"),
   applicationName: "Learning Games",
   openGraph: {
     type: "website",

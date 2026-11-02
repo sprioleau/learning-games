@@ -11,6 +11,7 @@ import {
   createPlayerState,
   playerStateSchema,
   awardCompletion,
+  awardMatchingCompletion,
   type PlayerState,
 } from "@/lib/platform/progress";
 import {
@@ -18,6 +19,12 @@ import {
   createBingoSession,
   type MoveResult,
 } from "@/lib/games/bingo";
+import {
+  clearMatchingCards,
+  createMatchingSession,
+  flipMatchingCard,
+  type MatchingOutcome,
+} from "@/lib/games/matching";
 import { isWorldUnlocked } from "@/lib/games/worlds";
 import { commandSchema, type GameCommand } from "@/lib/platform/commands";
 
@@ -26,12 +33,18 @@ type CommandResponse = {
   outcome: MoveResult["outcome"] | null;
 };
 type MoveCommand = Extract<GameCommand, { kind: "move" }>;
+type MatchingCommand = Extract<
+  GameCommand,
+  { kind: "matching-flip" | "matching-clear" }
+>;
 type GameContextValue = {
   state: PlayerState | null;
   storage: "cloud" | "device";
   isBusy: boolean;
   isAdminMode: boolean;
   isSavingMoves: boolean;
+  isSavingMatching: boolean;
+  match: (index: number | null) => MatchingOutcome;
   error: string | null;
   move: (word: string) => MoveResult | null;
   send: (command: GameCommand) => Promise<CommandResponse | null>;
@@ -76,10 +89,13 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const [isBusy, setIsBusy] = useState(false);
   const [isAdminMode, setIsAdminMode] = useState(false);
   const [isSavingMoves, setIsSavingMoves] = useState(false);
+  const [isSavingMatching, setIsSavingMatching] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasPendingCommand = useRef(false);
   const hasMoveDrain = useRef(false);
   const pendingMoves = useRef<MoveCommand[]>([]);
+  const pendingMatching = useRef<MatchingCommand[]>([]);
+  const hasMatchingDrain = useRef(false);
   const currentState = useRef<PlayerState | null>(null);
   const confirmedState = useRef<PlayerState | null>(null);
   function publishState(next: PlayerState) {
@@ -91,7 +107,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
     publishState(next);
   }
   async function reload() {
-    if (hasPendingCommand.current || pendingMoves.current.length) return;
+    if (
+      hasPendingCommand.current ||
+      pendingMoves.current.length ||
+      pendingMatching.current.length
+    )
+      return;
     try {
       const loaded = await loadPlayer();
       acceptState(loaded.state);
@@ -124,7 +145,12 @@ export function GameProvider({ children }: { children: ReactNode }) {
   }, []);
   async function send(command: GameCommand): Promise<CommandResponse | null> {
     const state = currentState.current;
-    if (!state || hasPendingCommand.current || pendingMoves.current.length)
+    if (
+      !state ||
+      hasPendingCommand.current ||
+      pendingMoves.current.length ||
+      pendingMatching.current.length
+    )
       return null;
     hasPendingCommand.current = true;
     setIsBusy(true);
@@ -159,6 +185,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
               crypto.randomUUID(),
               input.worldId,
               input.options,
+            ),
+          };
+        }
+        if (input.kind === "matching-start") {
+          if (!isAdminMode && !isWorldUnlocked(input.worldId, state.stars))
+            throw new Error("World locked");
+          next = {
+            ...state,
+            matchingSession: createMatchingSession(
+              crypto.randomUUID(),
+              input.worldId,
             ),
           };
         }
@@ -245,9 +282,125 @@ export function GameProvider({ children }: { children: ReactNode }) {
       setIsBusy(false);
     }
   }
+  async function drainMatching() {
+    if (hasMatchingDrain.current) return;
+    hasMatchingDrain.current = true;
+    try {
+      while (pendingMatching.current.length) {
+        const command = pendingMatching.current[0];
+        const response = await fetch("/api/player", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(command),
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error("Move was not saved");
+        const saved = playerStateSchema.parse(data.state);
+        confirmedState.current = saved;
+        pendingMatching.current.shift();
+        let projected = saved;
+        let hasConflict = data.outcome === "ignored";
+        for (const queued of pendingMatching.current) {
+          if (
+            !projected.matchingSession ||
+            projected.matchingSession.id !== queued.sessionId ||
+            projected.matchingSession.revision !== queued.expectedRevision
+          ) {
+            hasConflict = true;
+            break;
+          }
+          const next =
+            queued.kind === "matching-flip"
+              ? flipMatchingCard(projected.matchingSession, queued.index)
+                  .session
+              : clearMatchingCards(projected.matchingSession);
+          if (next.revision !== queued.expectedRevision + 1) {
+            hasConflict = true;
+            break;
+          }
+          projected = { ...projected, matchingSession: next };
+        }
+        if (hasConflict) {
+          pendingMatching.current = [];
+          publishState(saved);
+          setError(
+            "Your saved board changed. We’ve restored it so you can keep playing.",
+          );
+          break;
+        }
+        publishState(projected);
+      }
+    } catch {
+      pendingMatching.current = [];
+      if (confirmedState.current) publishState(confirmedState.current);
+      setError(
+        "That didn’t save. Check your connection, then try again. Your last saved progress is safe.",
+      );
+    } finally {
+      hasMatchingDrain.current = false;
+      setIsSavingMatching(false);
+      setIsBusy(false);
+    }
+  }
+  function match(index: number | null): MatchingOutcome {
+    const state = currentState.current;
+    if (
+      !state?.matchingSession ||
+      hasPendingCommand.current ||
+      pendingMoves.current.length
+    )
+      return "ignored";
+    const session = state.matchingSession;
+    const result =
+      index === null
+        ? { session: clearMatchingCards(session), outcome: "flip" as const }
+        : flipMatchingCard(session, index);
+    if (result.session.revision === session.revision) return "ignored";
+    setError(null);
+    if (storage === "device") {
+      try {
+        const next = awardMatchingCompletion(state, result.session);
+        localStorage.setItem(
+          isAdminMode ? `${storageKey}:admin` : storageKey,
+          JSON.stringify(next),
+        );
+        acceptState(next);
+      } catch {
+        setError(
+          "That didn’t save. Check your connection, then try again. Your last saved progress is safe.",
+        );
+        return "ignored";
+      }
+      return result.outcome;
+    }
+    const command =
+      index === null
+        ? {
+            kind: "matching-clear" as const,
+            sessionId: session.id,
+            expectedRevision: session.revision,
+          }
+        : {
+            kind: "matching-flip" as const,
+            sessionId: session.id,
+            expectedRevision: session.revision,
+            index,
+          };
+    pendingMatching.current.push(command);
+    publishState({ ...state, matchingSession: result.session });
+    setIsSavingMatching(true);
+    setIsBusy(true);
+    void drainMatching();
+    return result.outcome;
+  }
   function move(word: string): MoveResult | null {
     const state = currentState.current;
-    if (!state?.session || hasPendingCommand.current) return null;
+    if (
+      !state?.session ||
+      hasPendingCommand.current ||
+      pendingMatching.current.length
+    )
+      return null;
     const predicted = applyBingoMove(state.session, word);
     if (predicted.outcome === "ignored" || predicted.outcome === "incorrect")
       return predicted;
@@ -292,6 +445,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
         isBusy,
         isAdminMode,
         isSavingMoves,
+        isSavingMatching,
+        match,
         error,
         move,
         send,

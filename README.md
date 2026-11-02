@@ -2,7 +2,7 @@
 
 A playful learning hub for ages 4–6, with an explorer jellyfish and a complete first game: **Word Bingo**.
 
-- [Play the production app](https://learning-games-peach.vercel.app)
+- [Play the production app](https://sp-learning-games.vercel.app)
 - [GitHub](https://github.com/sprioleau/learning-games)
 - [Architecture and extension points](docs/architecture.md)
 - [Artwork prompts and exact export specs](docs/asset-brief.md)
@@ -64,7 +64,7 @@ The project is `sprioleau-projects/learning-games`. Development and production h
 1. Deploy backend changes with `npx convex deploy`.
 2. Set `NEXT_PUBLIC_CONVEX_URL` and `GAME_SERVER_SECRET` in Vercel production. The latter must match `GAME_SERVER_SECRET` in the production Convex deployment. Use CLI stdin or the dashboard for secrets, never command-line literals or public variables.
 3. Run `vercel deploy --prod --scope sprioleau-projects`.
-4. Verify the deployed flow. Use `TEST_BASE_URL=https://learning-games-peach.vercel.app npm run test:browser` when deployment access allows browser tests.
+4. Verify the deployed flow. Use `TEST_BASE_URL=https://sp-learning-games.vercel.app npm run test:browser` when deployment access allows browser tests.
 
 Vercel Git builds deploy the frontend only. After changing Convex functions or schema, deploy Convex first; an automated combined backend/preview pipeline is a later addition.
 

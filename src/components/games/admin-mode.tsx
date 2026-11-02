@@ -17,6 +17,9 @@ export function AdminMode() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [gameId, setGameId] = useState<"word-bingo" | "card-matching">(
+    "word-bingo",
+  );
   const [wordSet, setWordSet] = useState<"starter" | "sight">("starter");
   async function login(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -60,12 +63,18 @@ export function AdminMode() {
   }
   async function startDemo(worldId: WorldId) {
     if (!state) return;
-    const result = await send({
-      kind: "start",
-      worldId,
-      options: { ...state.options, wordSet, hasWordHints: true },
-    });
-    if (result) router.push("/play/word-bingo");
+    const result =
+      gameId === "card-matching"
+        ? await send({ kind: "matching-start", worldId })
+        : await send({
+            kind: "start",
+            worldId,
+            options: { ...state.options, wordSet, hasWordHints: true },
+          });
+    if (result)
+      router.push(
+        gameId === "card-matching" ? "/play/card-matching" : "/play/word-bingo",
+      );
   }
   return (
     <GameScene className="admin-scene">
@@ -108,28 +117,51 @@ export function AdminMode() {
               <ShieldCheck /> ADMIN MODE ACTIVE
             </span>
             <h1>Every world is ready!</h1>
-            <p>Word Bingo · all five worlds · both word collections</p>
+            <p>All five worlds are ready to explore.</p>
             <div
               className="admin-levels"
               role="group"
-              aria-label="Word collection"
+              aria-label="Choose a game"
             >
               {(
                 [
-                  ["starter", "Starter words"],
-                  ["sight", "Sight words"],
+                  ["word-bingo", "Word Bingo"],
+                  ["card-matching", "Picture Pairs"],
                 ] as const
               ).map(([id, label]) => (
                 <Button
                   key={id}
                   variant="outline"
-                  aria-pressed={wordSet === id}
-                  onClick={() => setWordSet(id)}
+                  aria-pressed={gameId === id}
+                  onClick={() => setGameId(id)}
                 >
                   {label}
                 </Button>
               ))}
             </div>
+            {gameId === "word-bingo" && (
+              <div
+                className="admin-levels"
+                role="group"
+                aria-label="Word collection"
+              >
+                {(
+                  [
+                    ["starter", "Starter words"],
+                    ["sight", "Sight words"],
+                  ] as const
+                ).map(([id, label]) => (
+                  <Button
+                    key={id}
+                    variant="outline"
+                    aria-pressed={wordSet === id}
+                    onClick={() => setWordSet(id)}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+            )}
             <div className="admin-world-grid">
               {worlds.map((world) => (
                 <Button

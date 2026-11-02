@@ -3,9 +3,16 @@ import { v } from "convex/values";
 import {
   createPlayerState,
   awardCompletion,
+  awardMatchingCompletion,
+  playerStateSchema,
 } from "../src/lib/platform/progress";
 import { commandSchema } from "../src/lib/platform/commands";
 import { applyBingoMove, createBingoSession } from "../src/lib/games/bingo";
+import {
+  clearMatchingCards,
+  createMatchingSession,
+  flipMatchingCard,
+} from "../src/lib/games/matching";
 import { isWorldUnlocked } from "../src/lib/games/worlds";
 
 function authorize(secret: string) {
@@ -41,7 +48,7 @@ export const command = mutation({
       .query("players")
       .withIndex("by_key", (q) => q.eq("keyHash", args.keyHash))
       .unique();
-    let state = player?.state ?? createPlayerState();
+    let state = playerStateSchema.parse(player?.state ?? createPlayerState());
     let outcome: "correct" | "incorrect" | "won" | "ignored" | null = null;
     if (input.kind === "options") state = { ...state, options: input.options };
     if (input.kind === "start") {
@@ -67,6 +74,30 @@ export const command = mutation({
       const result = applyBingoMove(state.session, input.word);
       state = awardCompletion(state, result.session);
       outcome = result.outcome;
+    }
+    if (input.kind === "matching-start") {
+      if (!args.hasAdminAccess && !isWorldUnlocked(input.worldId, state.stars))
+        throw new Error("World locked");
+      state = {
+        ...state,
+        matchingSession: createMatchingSession(args.sessionId, input.worldId),
+      };
+    }
+    if (input.kind === "matching-flip" || input.kind === "matching-clear") {
+      const session = state.matchingSession;
+      if (
+        !session ||
+        session.id !== input.sessionId ||
+        session.revision !== input.expectedRevision
+      )
+        return { state, outcome: "ignored" as const };
+      if (input.kind === "matching-flip") {
+        const move = flipMatchingCard(session, input.index);
+        if (move.outcome === "ignored")
+          return { state, outcome: "ignored" as const };
+        state = awardMatchingCompletion(state, move.session);
+        outcome = move.outcome === "flip" ? null : move.outcome;
+      } else state = { ...state, matchingSession: clearMatchingCards(session) };
     }
     if (player) await ctx.db.patch(player._id, { state });
     else await ctx.db.insert("players", { keyHash: args.keyHash, state });
