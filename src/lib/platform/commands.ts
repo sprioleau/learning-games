@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { matchingPairCountSchema } from "../games/matching";
 import { gameOptionsSchema } from "../games/options";
 export const commandSchema = z.discriminatedUnion("kind", [
   z.object({
@@ -14,6 +15,7 @@ export const commandSchema = z.discriminatedUnion("kind", [
   }),
   z.object({
     kind: z.literal("matching-start"),
+    pairCount: matchingPairCountSchema.optional(),
     worldId: z.enum(["jungle", "desert", "arctic", "city", "ocean"]),
   }),
   z.object({

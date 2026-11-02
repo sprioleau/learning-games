@@ -196,6 +196,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
             matchingSession: createMatchingSession(
               crypto.randomUUID(),
               input.worldId,
+              Math.random,
+              Date.now(),
+              input.pairCount,
             ),
           };
         }

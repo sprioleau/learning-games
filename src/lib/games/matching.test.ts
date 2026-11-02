@@ -17,6 +17,30 @@ describe("picture matching rules", () => {
     for (const face of session.board)
       expect(session.board.filter((item) => item === face)).toHaveLength(2);
   });
+  it.each([4, 6, 10] as const)("plays and wins a %i-pair game", (pairCount) => {
+    let session = createMatchingSession(
+      "game",
+      "jungle",
+      Math.random,
+      Date.now(),
+      pairCount,
+    );
+    expect(session.board).toHaveLength(pairCount * 2);
+    expect(new Set(session.board).size).toBe(pairCount);
+    expect(flipMatchingCard(session, session.board.length).outcome).toBe(
+      "ignored",
+    );
+    for (const face of new Set(session.board)) {
+      const pair = session.board.flatMap((item, index) =>
+        item === face ? [index] : [],
+      );
+      expect(pair).toHaveLength(2);
+      session = flipMatchingCard(session, pair[0]).session;
+      session = flipMatchingCard(session, pair[1]).session;
+    }
+    expect(session.phase).toBe("won");
+    expect(awardMatchingCompletion(createPlayerState(), session).stars).toBe(1);
+  });
   it("rejects flipping a card twice and holds mismatches until they are cleared", () => {
     const session = createMatchingSession("game", "jungle");
     const first = flipMatchingCard(session, 0);

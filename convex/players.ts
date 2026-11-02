@@ -80,7 +80,13 @@ export const command = mutation({
         throw new Error("World locked");
       state = {
         ...state,
-        matchingSession: createMatchingSession(args.sessionId, input.worldId),
+        matchingSession: createMatchingSession(
+          args.sessionId,
+          input.worldId,
+          Math.random,
+          Date.now(),
+          input.pairCount,
+        ),
       };
     }
     if (input.kind === "matching-flip" || input.kind === "matching-clear") {

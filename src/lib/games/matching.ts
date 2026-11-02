@@ -12,12 +12,23 @@ export const matchingFaces = [
   "four-stars",
   "five-stars",
 ] as const;
+export const matchingPairCounts = [4, 6, 10] as const;
+export const matchingPairCountSchema = z.union([
+  z.literal(4),
+  z.literal(6),
+  z.literal(10),
+]);
+export type MatchingPairCount = z.infer<typeof matchingPairCountSchema>;
 export const matchingSessionSchema = z.object({
   version: z.literal(1),
   id: z.string(),
   gameId: z.literal("card-matching"),
   worldId: z.string(),
-  board: z.array(z.string()).length(20),
+  board: z
+    .array(z.string())
+    .refine((board) =>
+      matchingPairCounts.some((count) => board.length === count * 2),
+    ),
   revealed: z.array(z.number().int()),
   matched: z.array(z.number().int()),
   moves: z.number().int().min(0),
@@ -34,13 +45,15 @@ export function createMatchingSession(
   worldId: string,
   random: () => number = Math.random,
   now = Date.now(),
+  pairCount: MatchingPairCount = 10,
 ): MatchingSession {
+  const faces = shuffle([...matchingFaces], random).slice(0, pairCount);
   return {
     version: 1,
     id,
     gameId: "card-matching",
     worldId,
-    board: shuffle([...matchingFaces, ...matchingFaces], random),
+    board: shuffle([...faces, ...faces], random),
     revealed: [],
     matched: [],
     moves: 0,
@@ -59,7 +72,7 @@ export function flipMatchingCard(
     session.phase !== "playing" ||
     !Number.isInteger(index) ||
     index < 0 ||
-    index >= 20 ||
+    index >= session.board.length ||
     session.revealed.length === 2 ||
     session.revealed.includes(index) ||
     session.matched.includes(index)
@@ -69,7 +82,7 @@ export function flipMatchingCard(
   const isPair = revealed.length === 2;
   const isMatch = isPair && session.board[revealed[0]] === session.board[index];
   const matched = isMatch ? [...session.matched, ...revealed] : session.matched;
-  const hasWon = matched.length === 20;
+  const hasWon = matched.length === session.board.length;
   return {
     session: {
       ...session,

@@ -18,6 +18,10 @@ import {
   RewardStars,
 } from "@/components/scene/game-scene";
 import { Mascot } from "@/components/hub/mascot";
+import {
+  matchingPairCounts,
+  type MatchingPairCount,
+} from "@/lib/games/matching";
 import { artwork } from "@/lib/games/artwork";
 import { getWorld, worlds, type WorldId } from "@/lib/games/worlds";
 import { prepareGameAudio, playSound } from "@/lib/platform/audio";
@@ -64,6 +68,32 @@ function CardFace({ face }: { face: string }) {
     />
   );
 }
+function DifficultyChoice({
+  pairCount,
+  onChange,
+}: {
+  pairCount: MatchingPairCount;
+  onChange: (count: MatchingPairCount) => void;
+}) {
+  return (
+    <div
+      className="matching-difficulty"
+      role="group"
+      aria-label="Choose difficulty"
+    >
+      {matchingPairCounts.map((count) => (
+        <Button
+          key={count}
+          variant="outline"
+          aria-pressed={pairCount === count}
+          onClick={() => onChange(count)}
+        >
+          {count} pairs
+        </Button>
+      ))}
+    </div>
+  );
+}
 export function CardMatching() {
   const {
     state,
@@ -77,6 +107,7 @@ export function CardMatching() {
   } = useGamePlatform();
   const soundTimers = useRef<Set<number>>(new Set());
   const clearMismatch = useEffectEvent(() => match(null));
+  const [pairCount, setPairCount] = useState<MatchingPairCount>(10);
   const [selectedWorld, setSelectedWorld] = useState<WorldId | null>(null);
   const [isRestartOpen, setIsRestartOpen] = useState(false);
   const [dismissedWinId, setDismissedWinId] = useState<string | null>(null);
@@ -101,11 +132,12 @@ export function CardMatching() {
     },
     [session?.id],
   );
-  async function startGame() {
+  async function startGame(count: MatchingPairCount = pairCount) {
     if (!state) return;
     prepareGameAudio();
     const result = await send({
       kind: "matching-start",
+      pairCount: count,
       worldId: selectedWorld ?? world.id,
     });
     if (result) {
@@ -132,16 +164,13 @@ export function CardMatching() {
             ? "You found every pair!"
             : `A match! You found two ${face} cards.`,
       );
-      const timer = window.setTimeout(
-        () => {
-          soundTimers.current.delete(timer);
-          playSound(
-            outcome === "won" ? "win" : outcome,
-            state.options.isSoundEnabled,
-          );
-        },
-        180,
-      );
+      const timer = window.setTimeout(() => {
+        soundTimers.current.delete(timer);
+        playSound(
+          outcome === "won" ? "win" : outcome,
+          state.options.isSoundEnabled,
+        );
+      }, 180);
       soundTimers.current.add(timer);
     }
   }
@@ -167,9 +196,10 @@ export function CardMatching() {
           <span className="panel-eyebrow">A MEMORY ADVENTURE</span>
           <h2>Find the matching friends!</h2>
           <p>
-            Turn over two cards. If they match, they stay face up. Find all ten
-            pairs!
+            Turn over two cards. If they match, they stay face up. Find every
+            pair!
           </p>
+          <DifficultyChoice pairCount={pairCount} onChange={setPairCount} />
           <div
             className="matching-world-choice"
             role="group"
@@ -189,7 +219,7 @@ export function CardMatching() {
           <Button
             className="play-button coral-button"
             disabled={isBusy}
-            onClick={startGame}
+            onClick={() => startGame()}
           >
             <Play fill="currentColor" />
             Let’s play
@@ -204,6 +234,7 @@ export function CardMatching() {
             disabled={isBusy}
             onClick={() => {
               setSelectedWorld(world.id);
+              setPairCount((session.board.length / 2) as MatchingPairCount);
               setIsRestartOpen(true);
             }}
           >
@@ -219,7 +250,9 @@ export function CardMatching() {
             </span>
             <div className="matching-score">
               <Image src={artwork.rewardStar} alt="" width={64} height={64} />
-              <strong>{session.matched.length / 2} / 10 pairs</strong>
+              <strong>
+                {session.matched.length / 2} / {session.board.length / 2} pairs
+              </strong>
             </div>
             <span className="matching-points">
               {session.matched.length * 5} round points
@@ -227,7 +260,7 @@ export function CardMatching() {
           </div>
           <div className="matching-board-frame">
             <div
-              className="matching-board"
+              className={`matching-board matching-board-${session.board.length}`}
               role="group"
               aria-label="Matching cards"
             >
@@ -278,7 +311,9 @@ export function CardMatching() {
               Your star is saved.{" "}
               <Button
                 className="play-button"
-                onClick={startGame}
+                onClick={() =>
+                  startGame((session.board.length / 2) as MatchingPairCount)
+                }
                 disabled={isBusy}
               >
                 Play again
@@ -312,7 +347,8 @@ export function CardMatching() {
             <div className="win-reward-card parchment-panel">
               <span className="panel-eyebrow">A MEMORY SUPERSTAR!</span>
               <DialogDescription>
-                You matched all ten pairs.
+                You matched all{" "}
+                {session?.board.length && session.board.length / 2} pairs.
                 <br />A shiny star for your collection!
               </DialogDescription>
               <div className="win-rewards">
@@ -330,7 +366,9 @@ export function CardMatching() {
               <Button
                 className="play-button coral-button"
                 disabled={isBusy}
-                onClick={startGame}
+                onClick={() =>
+                  startGame((session!.board.length / 2) as MatchingPairCount)
+                }
               >
                 <Play fill="currentColor" />
                 Play again
@@ -349,6 +387,7 @@ export function CardMatching() {
             Your current cards will be replaced. Your earned stars and points
             stay safe.
           </DialogDescription>
+          <DifficultyChoice pairCount={pairCount} onChange={setPairCount} />
           <div
             className="matching-world-choice"
             role="group"
@@ -365,7 +404,11 @@ export function CardMatching() {
               </Button>
             ))}
           </div>
-          <Button className="play-button" disabled={isBusy} onClick={startGame}>
+          <Button
+            className="play-button"
+            disabled={isBusy}
+            onClick={() => startGame()}
+          >
             Start a new game
           </Button>
           <Button variant="outline" onClick={() => setIsRestartOpen(false)}>

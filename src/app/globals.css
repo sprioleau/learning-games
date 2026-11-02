@@ -1991,3 +1991,29 @@ button.word-prompt:hover:enabled {
   border-color: #8058ad;
   color: #52367b;
 }
+
+.matching-board-8 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+}
+.matching-board-12 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+.matching-difficulty {
+  display: flex;
+  justify-content: center;
+  gap: 0.5cqw;
+  margin: 0.5cqw 0;
+}
+.matching-difficulty button {
+  font-size: 1.05cqw;
+  border: 0.15cqw solid #d2a260;
+  background: #fff5dc;
+  color: #633d22;
+  border-radius: 1cqw;
+}
+.matching-difficulty button[aria-pressed="true"] {
+  background: #ffdc74;
+  border-color: #aa6c2d;
+}
