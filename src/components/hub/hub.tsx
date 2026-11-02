@@ -92,11 +92,6 @@ export function Hub() {
           <Button onClick={reload}>Try again</Button>
         </div>
       )}
-      {!state && !error && (
-        <div className="scene-loading" role="status">
-          Packing your adventure…
-        </div>
-      )}
       {view !== "stars" && (
         <>
           <section className="explorer-greeting">
@@ -139,10 +134,11 @@ export function Hub() {
               <p>Listen. Find. Make a row!</p>
               <Button
                 className="play-button coral-button"
-                disabled={!state || isBusy}
+                disabled={isBusy}
                 onClick={() => {
                   prepareGameAudio();
-                  if (hasActiveSession) router.push("/play/word-bingo");
+                  if (!state || hasActiveSession)
+                    router.push("/play/word-bingo");
                   else void startGame();
                 }}
               >
@@ -187,7 +183,7 @@ export function Hub() {
               <Button
                 className="play-button"
                 aria-label="Play Picture Pairs"
-                disabled={!state || isBusy}
+                disabled={isBusy}
                 onClick={() => {
                   prepareGameAudio();
                   router.push("/play/card-matching");

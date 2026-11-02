@@ -1930,7 +1930,7 @@ button.word-prompt:hover:enabled {
   width: 1.3cqw !important;
   height: 1.3cqw !important;
 }
-.matching-game-sign {
+.view-games .matching-game-sign {
   left: 40%;
   background: linear-gradient(145deg, #d6bcfa, #a77bda 70%, #8958bc);
   border-color: #f7e8ff;
