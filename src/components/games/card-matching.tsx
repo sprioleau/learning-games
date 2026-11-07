@@ -19,19 +19,34 @@ import {
 } from "@/components/scene/game-scene";
 import { Mascot } from "@/components/hub/mascot";
 import {
+  matchingFaces,
   matchingPairCounts,
   type MatchingPairCount,
 } from "@/lib/games/matching";
 import { artwork } from "@/lib/games/artwork";
 import { getWorld, worlds, type WorldId } from "@/lib/games/worlds";
+import { warmMatchingArtwork } from "@/lib/platform/artwork-cache";
 import { prepareGameAudio, playSound } from "@/lib/platform/audio";
 
 function getFaceLabel(face: string) {
+  if ((matchingFaces as readonly string[]).includes(face))
+    return face.replaceAll("-", " ");
   if (face.endsWith("star") || face.endsWith("stars"))
     return face.replaceAll("-", " ");
   return `${getWorld(face).shortName} island`;
 }
 function CardFace({ face }: { face: string }) {
+  if ((matchingFaces as readonly string[]).includes(face)) {
+    return (
+      <Image
+        src={`/assets/picture-cards/${face}.png`}
+        alt=""
+        width={300}
+        height={300}
+        sizes="(max-width:720px) 15vw, 150px"
+      />
+    );
+  }
   if (face.endsWith("star") || face.endsWith("stars")) {
     const count =
       [
@@ -120,6 +135,10 @@ export function CardMatching() {
   const isWon = session?.phase === "won" && !isSavingMatching;
   const isWinOpen = isWon && dismissedWinId !== session?.id;
   const hasMismatch = session?.revealed.length === 2;
+  const board = session?.board;
+  useEffect(() => {
+    if (board) warmMatchingArtwork(board);
+  }, [board]);
   useEffect(() => {
     if (!hasMismatch || error) return;
     const timeout = window.setTimeout(() => clearMismatch(), 1250);

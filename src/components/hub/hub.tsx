@@ -26,7 +26,7 @@ import {
   SceneHeader,
   RewardStars,
 } from "@/components/scene/game-scene";
-import { worlds, type WorldId } from "@/lib/games/worlds";
+import { getWorld, worlds, type WorldId } from "@/lib/games/worlds";
 import { prepareGameAudio } from "@/lib/platform/audio";
 import { artwork } from "@/lib/games/artwork";
 import { Mascot } from "./mascot";
@@ -41,6 +41,10 @@ export function Hub() {
   const stars = state?.stars ?? 0;
   const nextWorld = worlds.find((world) => world.starsRequired > stars);
   const hasActiveSession = state?.session?.phase === "playing";
+  const latestSession = [state?.session, state?.matchingSession]
+    .filter((session) => session != null)
+    .sort((a, b) => b.createdAt - a.createdAt)[0];
+  const currentWorld = getWorld(latestSession?.worldId ?? "jungle");
   async function startGame(worldId: WorldId = "jungle", shouldReplace = false) {
     if (!state) return;
     prepareGameAudio();
@@ -114,148 +118,178 @@ export function Hub() {
             <Mascot />
           </div>
           {view === "games" && (
-            <article className="bingo-game-sign">
-              <span className="game-sign-kicker">YOUR NEXT ADVENTURE</span>
-              <div className="bingo-sign-icon" aria-hidden="true">
-                {Array.from({ length: 9 }, (_, index) => (
-                  <span key={index}>
-                    {index === 4 && (
-                      <Image
-                        src={artwork.rewardStar}
-                        alt=""
-                        width={64}
-                        height={64}
-                      />
-                    )}
-                  </span>
-                ))}
-              </div>
-              <h2>Word Bingo</h2>
-              <p>Listen. Find. Make a row!</p>
-              <Button
-                className="play-button coral-button"
-                disabled={isBusy}
-                onClick={() => {
-                  prepareGameAudio();
-                  if (!state || hasActiveSession)
-                    router.push("/play/word-bingo");
-                  else void startGame();
-                }}
+            <>
+              <button
+                type="button"
+                className="world-preview parchment-panel"
+                onClick={() => setView("map")}
               >
-                <Play fill="currentColor" />
-                {isBusy
-                  ? "Getting ready…"
-                  : hasActiveSession
-                    ? "Keep playing"
-                    : "Let’s play"}
-              </Button>
-              <span className="sign-spark spark-one" aria-hidden="true">
-                ✦
-              </span>
-              <span className="sign-spark spark-two" aria-hidden="true">
-                ✦
-              </span>
-            </article>
-          )}
-          {view === "games" && (
-            <article className="bingo-game-sign matching-game-sign">
-              <span className="game-sign-kicker">A MEMORY ADVENTURE</span>
-              <div className="matching-sign-icon" aria-hidden="true">
+                <Image
+                  src={artwork.islands[currentWorld.id]}
+                  alt=""
+                  width={160}
+                  height={160}
+                />
                 <span>
-                  <Image
-                    src={artwork.rewardStar}
-                    alt=""
-                    width={64}
-                    height={64}
-                  />
+                  <small>YOUR LATEST ADVENTURE</small>
+                  <strong>{currentWorld.shortName}</strong>
+                  <span>Explore the map →</span>
                 </span>
-                <span>
-                  <Image
-                    src={artwork.rewardStar}
-                    alt=""
-                    width={64}
-                    height={64}
-                  />
-                </span>
-              </div>
-              <h2>Picture Pairs</h2>
-              <p>Flip, remember, match!</p>
-              <Button
-                className="play-button"
-                aria-label="Play Picture Pairs"
-                disabled={isBusy}
-                onClick={() => {
-                  prepareGameAudio();
-                  router.push("/play/card-matching");
-                }}
-              >
-                <Play fill="currentColor" />
-                Play
-              </Button>
-              <span className="sign-spark spark-one" aria-hidden="true">
-                ✦
-              </span>
-            </article>
-          )}
-          <section className="adventure-map" aria-label="Adventure map">
-            <h2 className="sr-only">Your adventure map</h2>
-            <svg
-              className="island-trail"
-              viewBox="0 0 800 800"
-              preserveAspectRatio="none"
-              aria-hidden="true"
-            >
-              <path d="M200 150 C450 10 740 120 580 260 S40 280 200 430 S740 400 590 530 S240 520 400 705" />
-            </svg>
-            {worlds.map((world) => {
-              const isUnlocked = isAdminMode || stars >= world.starsRequired;
-              return (
+              </button>
+              <section className="game-picker" aria-label="Choose a game">
+                <h2>Choose your game!</h2>
                 <div
-                  key={world.id}
-                  className={`map-island island-${world.id} ${isUnlocked ? "is-unlocked" : "is-locked"}`}
+                  className="game-carousel"
+                  tabIndex={0}
+                  aria-label="Games, scroll for more"
                 >
-                  <Button
-                    variant="ghost"
-                    className="island-button"
-                    disabled={!state || !isUnlocked || isBusy}
-                    aria-label={
-                      isUnlocked
-                        ? `Play Word Bingo in ${world.name}`
-                        : `${world.name}, unlocks at ${world.starsRequired} stars`
-                    }
-                    onClick={() => void startGame(world.id)}
-                  >
-                    <Image
-                      src={artwork.islands[world.id]}
-                      alt=""
-                      width={768}
-                      height={768}
-                      sizes="(max-width: 720px) 20vw, 280px"
-                    />
-                    <span className="island-label">
-                      {!isUnlocked && <LockKeyhole />}
-                      {world.shortName}
+                  <article className="bingo-game-sign">
+                    <span className="game-sign-kicker">
+                      YOUR NEXT ADVENTURE
                     </span>
-                    <span className="island-requirement">
-                      {isUnlocked ? (
-                        <>
-                          <Star fill="currentColor" />
-                          {world.starsRequired === 0
-                            ? "Let’s explore!"
-                            : "Unlocked!"}
-                        </>
-                      ) : (
-                        `${world.starsRequired} stars`
-                      )}
+                    <div className="bingo-sign-icon" aria-hidden="true">
+                      {Array.from({ length: 9 }, (_, index) => (
+                        <span key={index}>
+                          {index === 4 && (
+                            <Image
+                              src={artwork.rewardStar}
+                              alt=""
+                              width={64}
+                              height={64}
+                            />
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                    <h2>Word Bingo</h2>
+                    <p>Listen. Find. Make a row!</p>
+                    <Button
+                      className="play-button coral-button"
+                      disabled={isBusy}
+                      onClick={() => {
+                        prepareGameAudio();
+                        if (!state || hasActiveSession)
+                          router.push("/play/word-bingo");
+                        else void startGame();
+                      }}
+                    >
+                      <Play fill="currentColor" />
+                      {isBusy
+                        ? "Getting ready…"
+                        : hasActiveSession
+                          ? "Keep playing"
+                          : "Let’s play"}
+                    </Button>
+                    <span className="sign-spark spark-one" aria-hidden="true">
+                      ✦
                     </span>
-                  </Button>
+                    <span className="sign-spark spark-two" aria-hidden="true">
+                      ✦
+                    </span>
+                  </article>
+                  <article className="bingo-game-sign matching-game-sign">
+                    <span className="game-sign-kicker">A MEMORY ADVENTURE</span>
+                    <div className="matching-sign-icon" aria-hidden="true">
+                      <span>
+                        <Image
+                          src={artwork.rewardStar}
+                          alt=""
+                          width={64}
+                          height={64}
+                        />
+                      </span>
+                      <span>
+                        <Image
+                          src={artwork.rewardStar}
+                          alt=""
+                          width={64}
+                          height={64}
+                        />
+                      </span>
+                    </div>
+                    <h2>Picture Pairs</h2>
+                    <p>Flip, remember, match!</p>
+                    <Button
+                      className="play-button"
+                      aria-label="Play Picture Pairs"
+                      disabled={isBusy}
+                      onClick={() => {
+                        prepareGameAudio();
+                        router.push("/play/card-matching");
+                      }}
+                    >
+                      <Play fill="currentColor" />
+                      Play
+                    </Button>
+                    <span className="sign-spark spark-one" aria-hidden="true">
+                      ✦
+                    </span>
+                  </article>
                 </div>
-              );
-            })}
-            <span className="map-compass" aria-hidden="true">
-              <Compass />
-            </span>
-          </section>
+              </section>
+            </>
+          )}
+          {view === "map" && (
+            <section className="adventure-map" aria-label="Adventure map">
+              <h2 className="sr-only">Your adventure map</h2>
+              <svg
+                className="island-trail"
+                viewBox="0 0 800 800"
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                <path d="M200 150 C450 10 740 120 580 260 S40 280 200 430 S740 400 590 530 S240 520 400 705" />
+              </svg>
+              {worlds.map((world) => {
+                const isUnlocked = isAdminMode || stars >= world.starsRequired;
+                return (
+                  <div
+                    key={world.id}
+                    className={`map-island island-${world.id} ${isUnlocked ? "is-unlocked" : "is-locked"}`}
+                  >
+                    <Button
+                      variant="ghost"
+                      className="island-button"
+                      disabled={!state || !isUnlocked || isBusy}
+                      aria-label={
+                        isUnlocked
+                          ? `Play Word Bingo in ${world.name}`
+                          : `${world.name}, unlocks at ${world.starsRequired} stars`
+                      }
+                      onClick={() => void startGame(world.id)}
+                    >
+                      <Image
+                        src={artwork.islands[world.id]}
+                        alt=""
+                        width={768}
+                        height={768}
+                        sizes="(max-width: 720px) 20vw, 280px"
+                      />
+                      <span className="island-label">
+                        {!isUnlocked && <LockKeyhole />}
+                        {world.shortName}
+                      </span>
+                      <span className="island-requirement">
+                        {isUnlocked ? (
+                          <>
+                            <Star fill="currentColor" />
+                            {world.starsRequired === 0
+                              ? "Let’s explore!"
+                              : "Unlocked!"}
+                          </>
+                        ) : (
+                          `${world.starsRequired} stars`
+                        )}
+                      </span>
+                    </Button>
+                  </div>
+                );
+              })}
+              <span className="map-compass" aria-hidden="true">
+                <Compass />
+              </span>
+            </section>
+          )}
           <div className="journey-milestone parchment-panel">
             <Image src={artwork.rewardStar} alt="" width={80} height={80} />
             <div>

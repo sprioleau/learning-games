@@ -1,16 +1,26 @@
 import { z } from "zod";
 import { shuffle } from "./bingo";
 export const matchingFaces = [
-  "jungle",
-  "desert",
-  "arctic",
-  "city",
-  "ocean",
-  "one-star",
-  "two-stars",
-  "three-stars",
-  "four-stars",
-  "five-stars",
+  "baby-elephant",
+  "cactus",
+  "camel",
+  "coral-reef",
+  "crab",
+  "dolphin",
+  "explorer-jellyfish",
+  "lighthouse",
+  "little-fox",
+  "monkey",
+  "mountain-island",
+  "octopus",
+  "penguin",
+  "polar-bear-cub",
+  "sailboat",
+  "sea-turtle",
+  "sloth",
+  "toucan",
+  "treasure-chest",
+  "tropical-fish",
 ] as const;
 export const matchingPairCounts = [4, 6, 10] as const;
 export const matchingPairCountSchema = z.union([

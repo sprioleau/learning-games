@@ -2017,3 +2017,112 @@ button.word-prompt:hover:enabled {
   background: #ffdc74;
   border-color: #aa6c2d;
 }
+
+/* Home keeps the game library in focus while the full map has its own view. */
+.view-games .explorer-greeting {
+  left: 2%;
+  top: 19%;
+  width: 31%;
+  padding: 0;
+}
+.view-games .explorer-greeting h1 {
+  font-size: 3.5cqw;
+}
+.view-games .explorer-greeting p {
+  font-size: 1.25cqw;
+}
+.view-games .hub-mascot {
+  width: 25%;
+  left: 0;
+  bottom: 3%;
+}
+.game-picker {
+  position: absolute;
+  z-index: 5;
+  left: 34%;
+  top: 21%;
+  width: 62%;
+  height: 61%;
+}
+.game-picker > h2 {
+  color: #3e3024;
+  font-size: 2.3cqw;
+  font-family: var(--font-heading);
+  text-shadow: 0 0.12cqw #fff8e8;
+}
+.game-carousel {
+  display: flex;
+  align-items: stretch;
+  gap: 1.5cqw;
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 89%;
+  padding: 1cqw 0.8cqw 1.6cqw;
+  scrollbar-color: #a87a42 #fff2d5;
+  scrollbar-width: thin;
+}
+.view-games .game-carousel .bingo-game-sign {
+  position: relative;
+  left: auto;
+  top: auto;
+  flex: 0 0 44%;
+  width: auto;
+  height: 100%;
+  transform: none;
+  padding: 1.2cqw;
+}
+.view-games .game-carousel .bingo-game-sign h2 {
+  font-size: 2.3cqw;
+}
+.view-games .game-carousel .bingo-game-sign p {
+  font-size: 1.1cqw;
+}
+.view-games .game-carousel .bingo-game-sign .play-button {
+  font-size: 1.5cqw !important;
+}
+.world-preview {
+  position: absolute;
+  z-index: 7;
+  left: 5%;
+  top: 43%;
+  width: 24%;
+  height: 17%;
+  display: flex;
+  align-items: center;
+  text-align: left;
+  cursor: pointer;
+  color: #49301e;
+  padding: 0.4cqw;
+}
+.world-preview img {
+  width: 38%;
+  height: 100%;
+  object-fit: contain;
+}
+.world-preview > span {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.1;
+}
+.world-preview small {
+  font-size: 0.7cqw;
+  font-weight: 900;
+  letter-spacing: 0.04cqw;
+}
+.world-preview strong {
+  font-family: var(--font-heading);
+  font-size: 1.8cqw;
+}
+.world-preview > span > span {
+  color: #337b68;
+  font-size: 0.9cqw;
+  font-weight: 850;
+}
+.view-games .journey-milestone {
+  left: 34%;
+  bottom: 5%;
+  width: 47%;
+}
+.view-map .adventure-map {
+  background: none;
+}

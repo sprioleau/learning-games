@@ -35,6 +35,17 @@ describe("Picture Pairs adventure", () => {
           exact: true,
         })
         .click();
+      const picture = board
+        .getByRole("button", { name: /^Card 1, (?!face down)/ })
+        .locator("img");
+      await picture.waitFor();
+      await page.waitForFunction(
+        (image) =>
+          image instanceof HTMLImageElement &&
+          image.complete &&
+          image.naturalWidth > 0,
+        await picture.elementHandle(),
+      );
       await board
         .getByRole("button", {
           name: `Card ${other + 1}, face down`,
@@ -61,7 +72,7 @@ describe("Picture Pairs adventure", () => {
       });
       await page.reload();
       await board
-        .getByRole("button", { name: /^Card 1, .+(island|star)/ })
+        .getByRole("button", { name: /^Card 1, (?!face down)/ })
         .waitFor();
       const partner = faces.findIndex(
         (face, index) => index !== first && face === faces[first],

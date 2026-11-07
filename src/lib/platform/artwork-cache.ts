@@ -1,6 +1,7 @@
 "use client";
 import { getImageProps } from "next/image";
 import { artwork } from "@/lib/games/artwork";
+import { matchingFaces } from "@/lib/games/matching";
 import type { WorldId } from "@/lib/games/worlds";
 
 type ArtworkTask = {
@@ -92,6 +93,23 @@ export function warmGameArtwork(world: WorldId) {
     queuedKeys.add(task.key);
     queue.push(task);
   });
+  void drainArtworkQueue();
+  void drainArtworkQueue();
+}
+
+export function warmMatchingArtwork(board: string[]) {
+  for (const face of new Set(board)) {
+    if (!(matchingFaces as readonly string[]).includes(face)) continue;
+    const task = makeTask(
+      `/assets/picture-cards/${face}.png`,
+      300,
+      300,
+      "(max-width:720px) 15vw, 150px",
+    );
+    if (queuedKeys.has(task.key)) continue;
+    queuedKeys.add(task.key);
+    queue.unshift(task);
+  }
   void drainArtworkQueue();
   void drainArtworkQueue();
 }

@@ -33,12 +33,10 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.stubGlobal(
     "fetch",
-    vi
-      .fn()
-      .mockResolvedValue({
-        ok: true,
-        json: async () => ({ storage: "device" }),
-      }),
+    vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ storage: "device" }),
+    }),
   );
   vi.stubGlobal(
     "ResizeObserver",
@@ -57,7 +55,7 @@ describe("Picture Pairs", () => {
   it("flips immediately, announces and sounds each card, hides a mismatch, and restores matched cards after reload", async () => {
     const state = createPlayerState();
     const session = createMatchingSession("test-matching", "jungle");
-    session.board = matchingFaces.flatMap((face) => [face, face]);
+    session.board = matchingFaces.slice(0, 10).flatMap((face) => [face, face]);
     state.matchingSession = session;
     localStorage.setItem("learning-games:player:v1", JSON.stringify(state));
     const user = userEvent.setup();
@@ -71,15 +69,15 @@ describe("Picture Pairs", () => {
       within(board).getByRole("button", { name: "Card 1, face down" }),
     );
     expect(
-      within(board).getByRole("button", { name: "Card 1, Jungle island" }),
+      within(board).getByRole("button", { name: "Card 1, baby elephant" }),
     ).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("status")).toHaveTextContent("Jungle island");
+    expect(screen.getByRole("status")).toHaveTextContent("baby elephant");
     expect(playSound).toHaveBeenLastCalledWith("flip", true);
     await user.click(
       within(board).getByRole("button", { name: "Card 3, face down" }),
     );
     expect(screen.getByRole("status")).toHaveTextContent(
-      "Jungle island and Desert island are different",
+      "baby elephant and cactus are different",
     );
     expect(
       within(board).getByRole("button", { name: "Card 2, face down" }),
@@ -111,7 +109,7 @@ describe("Picture Pairs", () => {
     );
     expect(
       await screen.findByRole("button", {
-        name: "Card 1, Jungle island, matched",
+        name: "Card 1, baby elephant, matched",
       }),
     ).toBeDisabled();
     expect(screen.getByText("1 / 10 pairs")).toBeInTheDocument();

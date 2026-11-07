@@ -196,8 +196,24 @@ describe("a complete learning adventure", () => {
     try {
       await page.goto(baseURL);
       await page.getByRole("button", { name: "Game options" }).waitFor();
+      const picker = page.getByRole("region", { name: "Choose a game" });
+      expect(
+        await picker.getByRole("button", { name: "Let’s play" }).isVisible(),
+      ).toBe(true);
+      expect(
+        await picker
+          .getByRole("button", { name: "Play Picture Pairs" })
+          .isVisible(),
+      ).toBe(true);
+      expect(
+        await page
+          .getByRole("region", { name: "Adventure map", exact: true })
+          .count(),
+      ).toBe(0);
       await page
-        .getByRole("button", { name: "Adventure map", exact: true })
+        .getByRole("button", {
+          name: /YOUR LATEST ADVENTURE.*Jungle.*Explore the map/i,
+        })
         .click();
       const map = page.getByRole("region", {
         name: "Adventure map",
@@ -284,6 +300,12 @@ describe("a complete learning adventure", () => {
         .getByRole("article")
         .getByRole("button", { name: "Let’s play" })
         .waitFor();
+      await page.waitForFunction(() => {
+        const settings = document.querySelector<HTMLButtonElement>(
+          '[aria-label="Game options"]',
+        );
+        return settings && !settings.disabled;
+      });
       const scene = page.getByRole("main", {
         name: "Learning Games adventure",
       });

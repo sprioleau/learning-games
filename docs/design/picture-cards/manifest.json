@@ -1,0 +1,290 @@
+{
+  "asset_count": 20,
+  "has_verified_dimensions": true,
+  "has_verified_alpha": true,
+  "has_verified_10_percent_padding": true,
+  "reference_site": "https://sp-learning-games.vercel.app/",
+  "method": "Built-in image generation using approved explorer jellyfish as style reference; existing explorer jellyfish reused for exact identity. Resized and centered using Pillow, preserving alpha.",
+  "assets": [
+    {
+      "filename": "baby-elephant.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        40,
+        37,
+        270,
+        245
+      ],
+      "transparent_pixel_count": 59142,
+      "sha256": "77d25e8957a418673e154ee00e9a87bb039c92f5646e92b72a12e5ccc61e4ad3"
+    },
+    {
+      "filename": "cactus.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        51,
+        44,
+        260,
+        260
+      ],
+      "transparent_pixel_count": 64751,
+      "sha256": "c4a92f6c6d893f73763df78c073b27d0f26331dea13011f89256afd9717cb306"
+    },
+    {
+      "filename": "camel.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        47,
+        38,
+        269,
+        260
+      ],
+      "transparent_pixel_count": 66046,
+      "sha256": "dc48a42fbee30ffe8f4a92974a1c002d57ae00fa1a2264c1fb3e3c5eaed1760b"
+    },
+    {
+      "filename": "coral-reef.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        30,
+        36,
+        265,
+        258
+      ],
+      "transparent_pixel_count": 56933,
+      "sha256": "5dae46d28b402466657493f7b48b68668c7a57133c4d79bbdb143663bd2e901d"
+    },
+    {
+      "filename": "crab.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        41,
+        53,
+        266,
+        247
+      ],
+      "transparent_pixel_count": 64789,
+      "sha256": "ed570875506be3760f685193296771d247dfce84c8e1b29c2208d61ab619fe9f"
+    },
+    {
+      "filename": "dolphin.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        81,
+        50,
+        269,
+        257
+      ],
+      "transparent_pixel_count": 70431,
+      "sha256": "1fe52f614646ddb9750a6c6848b6e0d1866d8ed9c7ed3fc6386b20dd75f5e147"
+    },
+    {
+      "filename": "explorer-jellyfish.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        30,
+        42,
+        267,
+        257
+      ],
+      "transparent_pixel_count": 60503,
+      "sha256": "98eea060423d29ff1b3ba18a6fb2c373b74fd4d95c08edd2b740be8697bedf86"
+    },
+    {
+      "filename": "lighthouse.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        30,
+        35,
+        256,
+        264
+      ],
+      "transparent_pixel_count": 71549,
+      "sha256": "95fb1df124ef5a575b01d51950cbce495ba67184634f9945d29235f5817d6cfb"
+    },
+    {
+      "filename": "little-fox.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        40,
+        31,
+        268,
+        260
+      ],
+      "transparent_pixel_count": 62099,
+      "sha256": "5848bdc5ddd3030e9806f0864e79318bd69fe7b705017bfb42f06c5f972b0224"
+    },
+    {
+      "filename": "monkey.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        44,
+        38,
+        267,
+        252
+      ],
+      "transparent_pixel_count": 61478,
+      "sha256": "140e9eac476cb70955e648510f97d810ea504c4771b6f2b9bf0af737f2f71f13"
+    },
+    {
+      "filename": "mountain-island.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        30,
+        37,
+        269,
+        250
+      ],
+      "transparent_pixel_count": 60221,
+      "sha256": "616f5d1a3cf4743351c3fdf8a40e745040b03a7a75bfb1fe8c8205c49b7cfb56"
+    },
+    {
+      "filename": "octopus.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        33,
+        54,
+        265,
+        246
+      ],
+      "transparent_pixel_count": 62596,
+      "sha256": "8301d08546560240437ca2103b9205b45db9e36dedd38ae605661e20c1a4e652"
+    },
+    {
+      "filename": "penguin.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        38,
+        41,
+        257,
+        263
+      ],
+      "transparent_pixel_count": 61975,
+      "sha256": "ea4daccc26de22f5d9d46dbe31bc38d6b805b15b0a44c9242f6732d15b8192ad"
+    },
+    {
+      "filename": "polar-bear-cub.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        53,
+        38,
+        259,
+        253
+      ],
+      "transparent_pixel_count": 61035,
+      "sha256": "313993bd8326ee132857ace7fa9cdf6a082e61d44340aa781b196640abea602f"
+    },
+    {
+      "filename": "sailboat.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        30,
+        37,
+        252,
+        261
+      ],
+      "transparent_pixel_count": 63828,
+      "sha256": "b1d62dd688976848295e462c5fb33812a6ef40f946dfc902bf9fff648df2eb8c"
+    },
+    {
+      "filename": "sea-turtle.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        40,
+        71,
+        270,
+        247
+      ],
+      "transparent_pixel_count": 66882,
+      "sha256": "5bfa0560469d024786af8d995f051478246a8bebdfcfab4fe82a9f45e7ea4797"
+    },
+    {
+      "filename": "sloth.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        41,
+        38,
+        268,
+        257
+      ],
+      "transparent_pixel_count": 59851,
+      "sha256": "d9483a5cb62fe95d595bbfb5b1380e7ed081fda7486555b6245d3780cc36aae9"
+    },
+    {
+      "filename": "toucan.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        66,
+        57,
+        266,
+        257
+      ],
+      "transparent_pixel_count": 63001,
+      "sha256": "f7449e14d021a9ab0ff2de658be9eb5fd5246b627e71e155d50c9603f8ecd37f"
+    },
+    {
+      "filename": "treasure-chest.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        46,
+        30,
+        257,
+        262
+      ],
+      "transparent_pixel_count": 60275,
+      "sha256": "f5059d8e53176176e2fc8aefe128bdae387092200da202e155d5265bd3a9c51d"
+    },
+    {
+      "filename": "tropical-fish.png",
+      "width": 300,
+      "height": 300,
+      "has_true_alpha": true,
+      "content_bounds": [
+        44,
+        44,
+        264,
+        245
+      ],
+      "transparent_pixel_count": 64231,
+      "sha256": "db4965fab59a722290d4ca45c9bc21276ead355a7fb37166b4228cf7e64398dc"
+    }
+  ]
+}
