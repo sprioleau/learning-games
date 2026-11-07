@@ -60,6 +60,8 @@ describe("Jungle Jigsaw", () => {
         .filter({ hasText: "A piece found its place!" })
         .waitFor();
       expect(await page.getByText("1 / 9 pieces").isVisible()).toBe(true);
+      await page.reload();
+      await page.getByText("1 / 9 pieces").waitFor();
       await page.getByRole("button", { name: "Keyboard controls" }).click();
       const controls = page.getByRole("region", {
         name: "Place a puzzle piece",
@@ -77,11 +79,10 @@ describe("Jungle Jigsaw", () => {
           .selectOption(String((id % 3) + 1));
         await controls.getByRole("button", { name: "Place piece" }).click();
       }
-      expect(
-        await page
-          .getByRole("heading", { name: "Picture complete!" })
-          .isVisible(),
-      ).toBe(true);
+      await page.getByRole("heading", { name: "Picture complete!" }).waitFor();
+      await page.getByLabel("1 star", { exact: true }).waitFor();
+      await page.reload();
+      await page.getByRole("heading", { name: "Picture complete!" }).waitFor();
     } finally {
       await context.close();
     }

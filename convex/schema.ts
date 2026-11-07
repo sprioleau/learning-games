@@ -50,6 +50,7 @@ export const activitySessionValidator = v.object({
     v.literal("fraction-cafe"),
     v.literal("math-drops"),
     v.literal("word-builder"),
+    v.literal("jigsaw"),
   ),
   worldId: v.string(),
   mode: v.union(
@@ -59,6 +60,10 @@ export const activitySessionValidator = v.object({
     v.literal("multiplication"),
     v.literal("division"),
     v.literal("default"),
+    v.literal("3x3"),
+    v.literal("4x5"),
+    v.literal("7x7"),
+    v.literal("7x8"),
   ),
   questions: v.array(
     v.object({

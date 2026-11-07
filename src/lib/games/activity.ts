@@ -2,12 +2,14 @@ import { z } from "zod";
 import { createTrailQuestions } from "./number-trail";
 import { cafeOrders, isCafeOrderComplete } from "./fraction-cafe";
 import { createMathProblem, mathOperations } from "./math-drops";
+import { puzzleSizes } from "./jigsaw";
 
 export const activityGameSchema = z.enum([
   "number-trail",
   "fraction-cafe",
   "math-drops",
   "word-builder",
+  "jigsaw",
 ]);
 export const activityModeSchema = z.enum([
   "addition",
@@ -16,6 +18,10 @@ export const activityModeSchema = z.enum([
   "multiplication",
   "division",
   "default",
+  "3x3",
+  "4x5",
+  "7x7",
+  "7x8",
 ]);
 export const activityAnswerSchema = z.union([
   z.number().int(),
@@ -83,6 +89,14 @@ export function createActivitySession(
       answer: item.numerator,
       payload: JSON.stringify(item),
     }));
+  } else if (gameId === "jigsaw") {
+    const size = puzzleSizes.find((item) => item.id === mode);
+    if (!size) throw new Error("Invalid activity mode");
+    questions = Array.from({ length: size.rows * size.columns }, (_, id) => ({
+      prompt: `Piece ${id + 1}`,
+      answer: id,
+      payload: "{}",
+    }));
   } else if (gameId === "word-builder") {
     if (mode !== "default") throw new Error("Invalid activity mode");
     questions = wordPuzzles.map((item) => ({
@@ -128,10 +142,16 @@ export function answerActivity(
   if (session.phase !== "playing" || !question)
     return { session, outcome: "ignored" };
   const isCorrect =
-    session.gameId === "fraction-cafe"
-      ? Array.isArray(answer) &&
-        isCafeOrderComplete(JSON.parse(question.payload), answer)
-      : !Array.isArray(answer) && answer === question.answer;
+    session.gameId === "jigsaw"
+      ? typeof answer === "number" &&
+        Number.isInteger(answer) &&
+        answer >= 0 &&
+        answer < session.questions.length &&
+        !session.answers.includes(answer)
+      : session.gameId === "fraction-cafe"
+        ? Array.isArray(answer) &&
+          isCafeOrderComplete(JSON.parse(question.payload), answer)
+        : !Array.isArray(answer) && answer === question.answer;
   if (!isCorrect) return { session, outcome: "incorrect" };
   const cursor = session.cursor + 1;
   const hasWon = cursor === session.questions.length;

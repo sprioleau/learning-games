@@ -76,7 +76,12 @@ type Drag = {
   startPage: number;
 };
 export function Jigsaw() {
-  const { state } = useGamePlatform();
+  const { state, send, isBusy, error, reload } = useGamePlatform();
+  const savedSession = state?.activitySessions.find(
+    (item) => item.gameId === "jigsaw",
+  );
+  const restoredId = useRef<string | null>(null);
+  const isStarting = useRef(false);
   const [sizeId, setSizeId] = useState<PuzzleSize["id"]>("3x3");
   const size = puzzleSizes.find((item) => item.id === sizeId) ?? puzzleSizes[0];
   const [pieces, setPieces] = useState<PuzzlePiece[]>([]);
@@ -115,7 +120,7 @@ export function Jigsaw() {
     return result;
   }, [size]);
   const placedCount = pieces.filter((piece) => piece.isPlaced).length;
-  const isWon = isStarted && pieces.length > 0 && placedCount === pieces.length;
+  const isWon = isStarted && savedSession?.phase === "won";
   const pages = Math.ceil(
     (size.rows * size.columns) / getPuzzlePageCapacity(size),
   );
@@ -123,6 +128,35 @@ export function Jigsaw() {
     piecesRef.current = next;
     setPieces(next);
   }
+  useEffect(() => {
+    if (
+      !savedSession ||
+      restoredId.current === savedSession.id ||
+      isStarting.current
+    )
+      return;
+    const savedSize = puzzleSizes.find((item) => item.id === savedSession.mode);
+    if (!savedSize) return;
+    const frame = window.requestAnimationFrame(() => {
+      restoredId.current = savedSession.id;
+      const restored = createPuzzlePieces(savedSize).map((piece) =>
+        savedSession.answers.includes(piece.id)
+          ? { ...piece, ...getPieceTarget(piece, savedSize), isPlaced: true }
+          : piece,
+      );
+      piecesRef.current = restored;
+      setPieces(restored);
+      setSizeId(savedSize.id);
+      setPage(0);
+      setIsStarted(true);
+      setMessage(
+        savedSession.phase === "won"
+          ? "You finished the picture! Wonderful work!"
+          : "Your puzzle is ready to continue.",
+      );
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [savedSession]);
   useEffect(() => {
     const image = new window.Image();
     image.onload = () => {
@@ -250,9 +284,25 @@ export function Jigsaw() {
     draw();
     return () => observer.disconnect();
   }, [draw, isStarted]);
-  function openBox() {
+  async function openBox() {
+    if (!state || isBusy) return;
     prepareGameAudio();
     setIsOpening(true);
+    isStarting.current = true;
+    const result = await send({
+      kind: "activity-start",
+      gameId: "jigsaw",
+      mode: size.id,
+      worldId: "jungle",
+    });
+    if (!result) {
+      isStarting.current = false;
+      setIsOpening(false);
+      return;
+    }
+    restoredId.current =
+      result.state.activitySessions.find((item) => item.gameId === "jigsaw")
+        ?.id ?? null;
     const delay = window.matchMedia("(prefers-reduced-motion: reduce)").matches
       ? 0
       : 550;
@@ -260,6 +310,7 @@ export function Jigsaw() {
       publishPieces(createPuzzlePieces(size));
       setPage(0);
       setIsStarted(true);
+      isStarting.current = false;
       setIsOpening(false);
       setSelectedPiece("");
       setTargetRow("1");
@@ -275,7 +326,7 @@ export function Jigsaw() {
     };
   }
   function handlePointerDown(event: PointerEvent<HTMLCanvasElement>) {
-    if (drag.current || !isStarted || isWon) return;
+    if (drag.current || !isStarted || isWon || isBusy) return;
     const canvas = event.currentTarget;
     const context = canvas.getContext("2d");
     if (!context) return;
@@ -334,7 +385,7 @@ export function Jigsaw() {
     );
     event.preventDefault();
   }
-  function finishPointer(
+  async function finishPointer(
     event: PointerEvent<HTMLCanvasElement>,
     isCancelled: boolean,
   ) {
@@ -357,9 +408,24 @@ export function Jigsaw() {
       }
       return { ...piece, page: piece.x < puzzleTray.x ? -1 : page };
     });
+    const previous = piecesRef.current;
     publishPieces(next);
-    if (didPlace) {
-      const hasWon = next.every((piece) => piece.isPlaced);
+    if (didPlace && savedSession) {
+      const result = await send({
+        kind: "activity-answer",
+        gameId: "jigsaw",
+        sessionId: savedSession.id,
+        expectedRevision: savedSession.revision,
+        answer: active.pieceId,
+      });
+      if (
+        !result ||
+        (result.outcome !== "correct" && result.outcome !== "won")
+      ) {
+        publishPieces(previous);
+        return;
+      }
+      const hasWon = result.outcome === "won";
       setMessage(
         hasWon
           ? "You finished the picture! Wonderful work!"
@@ -368,12 +434,12 @@ export function Jigsaw() {
       playSound(hasWon ? "win" : "correct", state?.options.isSoundEnabled);
     }
   }
-  function placeSelectedPiece() {
+  async function placeSelectedPiece() {
     const id = Number(selectedPiece);
     const piece = piecesRef.current.find(
       (item) => item.id === id && !item.isPlaced,
     );
-    if (!piece) return;
+    if (!piece || !savedSession || isBusy) return;
     if (
       piece.row + 1 !== Number(targetRow) ||
       piece.column + 1 !== Number(targetColumn)
@@ -387,9 +453,21 @@ export function Jigsaw() {
         ? { ...item, ...getPieceTarget(item, size), isPlaced: true }
         : item,
     );
+    const previous = piecesRef.current;
     publishPieces(next);
+    const result = await send({
+      kind: "activity-answer",
+      gameId: "jigsaw",
+      sessionId: savedSession.id,
+      expectedRevision: savedSession.revision,
+      answer: id,
+    });
+    if (!result || (result.outcome !== "correct" && result.outcome !== "won")) {
+      publishPieces(previous);
+      return;
+    }
     setSelectedPiece("");
-    const hasWon = next.every((item) => item.isPlaced);
+    const hasWon = result.outcome === "won";
     setMessage(
       hasWon
         ? "You finished the picture! Wonderful work!"
@@ -400,6 +478,12 @@ export function Jigsaw() {
   return (
     <GameScene className="jigsaw-scene">
       <SceneHeader title="Jungle Jigsaw" />
+      {error && (
+        <div className="scene-message scene-error" role="alert">
+          {error}
+          <Button onClick={reload}>Try again</Button>
+        </div>
+      )}
       {!isStarted ? (
         <>
           <div className="jigsaw-mascot floating-mascot">
@@ -432,7 +516,7 @@ export function Jigsaw() {
               type="button"
               className={`jigsaw-box ${isOpening ? "is-opening" : ""}`}
               aria-label="Open puzzle box"
-              disabled={isOpening}
+              disabled={isOpening || isBusy || !state}
               onClick={openBox}
             >
               <span>
@@ -500,6 +584,7 @@ export function Jigsaw() {
                 Piece{" "}
                 <select
                   aria-label="Piece"
+                  disabled={isBusy}
                   value={selectedPiece}
                   onChange={(event) => setSelectedPiece(event.target.value)}
                 >
@@ -518,6 +603,7 @@ export function Jigsaw() {
                 Row{" "}
                 <select
                   aria-label="Row"
+                  disabled={isBusy}
                   value={targetRow}
                   onChange={(event) => setTargetRow(event.target.value)}
                 >
@@ -532,6 +618,7 @@ export function Jigsaw() {
                 Column{" "}
                 <select
                   aria-label="Column"
+                  disabled={isBusy}
                   value={targetColumn}
                   onChange={(event) => setTargetColumn(event.target.value)}
                 >
@@ -543,7 +630,7 @@ export function Jigsaw() {
                 </select>
               </label>
               <Button
-                disabled={selectedPiece === ""}
+                disabled={selectedPiece === "" || isBusy}
                 onClick={placeSelectedPiece}
               >
                 Place piece
@@ -554,7 +641,7 @@ export function Jigsaw() {
             <section className="jigsaw-won parchment-panel">
               {state?.options.isCelebrationEnabled && <Celebration />}
               <h2>Picture complete!</h2>
-              <p>You put every piece in place!</p>
+              <p>You put every piece in place! +1 star · +100 points</p>
               <Button
                 className="play-button coral-button"
                 onClick={() => setIsStarted(false)}

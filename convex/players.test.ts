@@ -273,6 +273,48 @@ describe("server-authoritative learning activities", () => {
       ).toEqual(result.state.activitySessions);
     },
   );
+  it("saves puzzle pieces in any order and awards one star only on completion", async () => {
+    const t = app.createTest();
+    const base = {
+      secret,
+      keyHash: "puzzle-player",
+      sessionId: "puzzle-round",
+    };
+    let result = await t.mutation(app.api.players.command, {
+      ...base,
+      command: JSON.stringify({
+        kind: "activity-start",
+        gameId: "jigsaw",
+        mode: "3x3",
+        worldId: "jungle",
+      }),
+    });
+    let revision = 0;
+    let lastCommand = "";
+    for (const piece of [8, 0, 4, 7, 2, 3, 1, 6, 5]) {
+      lastCommand = JSON.stringify({
+        kind: "activity-answer",
+        gameId: "jigsaw",
+        sessionId: "puzzle-round",
+        expectedRevision: revision,
+        answer: piece,
+      });
+      result = await t.mutation(app.api.players.command, {
+        ...base,
+        command: lastCommand,
+      });
+      revision++;
+    }
+    expect(result.outcome).toBe("won");
+    expect(result.state.stars).toBe(1);
+    expect(result.state.points).toBe(100);
+    const retry = await t.mutation(app.api.players.command, {
+      ...base,
+      command: lastCommand,
+    });
+    expect(retry.outcome).toBe("ignored");
+    expect(retry.state.stars).toBe(1);
+  });
   it("replaces an expired math drop without credit and ignores duplicate skips", async () => {
     const t = app.createTest();
     const base = { secret, keyHash: "skip-player", sessionId: "drop-round" };
