@@ -1,0 +1,142 @@
+.number-trail-scene .number-trail-panel {
+  position: absolute;
+  z-index: 4;
+  left: 18%;
+  top: 20%;
+  width: 77%;
+  height: 67%;
+  padding: 2cqw 3cqw;
+  color: #4a3426;
+}
+.number-trail-mascot {
+  position: absolute;
+  z-index: 5;
+  width: 23%;
+  bottom: 1%;
+  left: -1%;
+  pointer-events: none;
+}
+.number-trail-intro {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 1.1cqw;
+  text-align: center;
+}
+.number-trail-panel h2 {
+  font-family: var(--font-heading);
+  font-size: 3.1cqw;
+  line-height: 1.1;
+}
+.number-trail-panel p {
+  font-size: 1.5cqw;
+  font-weight: 750;
+}
+.number-trail-operationChoices {
+  display: flex;
+  gap: 0.7cqw;
+}
+.number-trail-operationChoices button,
+.number-trail-changeChallenge {
+  height: auto !important;
+  padding: 0.6cqw 1.3cqw !important;
+  font-size: 1.25cqw !important;
+  border: 0.15cqw solid #b38a4e !important;
+  border-radius: 1.1cqw !important;
+  background: #fff9e9 !important;
+  color: #604322 !important;
+}
+.number-trail-operationChoices button[aria-pressed="true"] {
+  background: #ffda75 !important;
+}
+.number-trail-game {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+.number-trail-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2cqw;
+}
+.number-trail-heading h2 {
+  font-size: 2.7cqw;
+}
+.number-trail-equation {
+  font-family: var(--font-heading);
+  font-size: 3.2cqw;
+  white-space: nowrap;
+  padding: 0.8cqw 1.5cqw;
+  border: 0.2cqw solid #eabf71;
+  border-radius: 1.5cqw;
+  background: #ffdd83;
+}
+.number-trail-numberLine {
+  display: flex;
+  align-items: center;
+  gap: 0.45cqw;
+  position: relative;
+}
+.number-trail-numberLine::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 2%;
+  right: 2%;
+  height: 0.35cqw;
+  background: #9d7951;
+}
+.number-trail-number {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  aspect-ratio: 1;
+  border: 0.18cqw solid #bd8e49;
+  border-radius: 50%;
+  background: #fffaf0;
+  color: #52391f;
+  font-family: var(--font-heading);
+  font-size: 2cqw;
+  font-weight: 900;
+  box-shadow: 0 0.22cqw #b48c54;
+  cursor: pointer;
+}
+.number-trail-number:hover {
+  background: #ffdf81;
+  transform: translateY(-0.2cqw);
+}
+.number-trail-number:focus-visible {
+  outline: 0.25cqw solid #325fbc;
+  outline-offset: 0.15cqw;
+}
+.number-trail-start {
+  background: #9cd6bf;
+  border-color: #4c967d;
+}
+.number-trail-marker {
+  position: absolute;
+  left: 50%;
+  top: -1.55cqw;
+  transform: translateX(-50%);
+  font-size: 1.4cqw;
+  color: #c27418;
+}
+.number-trail-status {
+  text-align: center;
+  color: #3d745a;
+  min-height: 1.8em;
+}
+.number-trail-restart {
+  align-self: center;
+  background: none;
+  border: 0;
+  color: #715029;
+  text-decoration: underline;
+  font-size: 1cqw;
+  font-weight: 800;
+  cursor: pointer;
+}

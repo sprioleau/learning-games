@@ -1,0 +1,273 @@
+.math-drops-area {
+  position: absolute;
+  inset: 17% 5% 6%;
+  display: grid;
+  grid-template-columns: 28% 41% 27%;
+  gap: 2%;
+  z-index: 3;
+}
+.math-drops-panel {
+  background: #fff4d9;
+  border: 0.25cqw solid #ebc78b;
+  box-shadow:
+    0 0.35cqw 0 #9f7046,
+    inset 0 0 1cqw #e8bb6655;
+  border-radius: 1.6cqw;
+  padding: 1.3cqw;
+  color: #493123;
+  min-height: 0;
+}
+.math-drops-panel h2 {
+  font-family: var(--font-baloo);
+  font-size: 2cqw;
+  line-height: 1.1;
+}
+.math-drops-panel p,
+.math-drops-panel label {
+  font-size: 1.05cqw;
+  font-weight: 800;
+}
+.math-drops-operations {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5cqw;
+  margin: 0.8cqw 0;
+}
+.math-drops-operations button,
+.math-drops-speed button,
+.math-drops-keypad button {
+  height: auto;
+  min-height: 0;
+  border-radius: 0.8cqw;
+  border: 0.14cqw solid #dfbb82;
+  background: #fffaf0;
+  color: #604024;
+  font-weight: 850;
+  padding: 0.45cqw 0.3cqw;
+  font-size: 1.05cqw;
+}
+.math-drops-operations button[aria-pressed="true"],
+.math-drops-speed button[aria-pressed="true"] {
+  background: #ffde77;
+  border-color: #be8240;
+}
+.math-drops-speed {
+  display: flex;
+  gap: 0.45cqw;
+  margin: 0.6cqw 0 1cqw;
+}
+.math-drops-speed button {
+  flex: 1;
+}
+.math-drops-start {
+  width: 100%;
+  font-size: 1.4cqw !important;
+  padding: 0.65cqw !important;
+  margin-top: 0.6cqw;
+}
+.math-drops-score {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3cqw;
+  font-size: 1.3cqw;
+  font-weight: 900;
+}
+.math-drops-ground {
+  position: relative;
+  overflow: hidden;
+  border-radius: 2cqw;
+  border: 0.25cqw solid #e5c38b;
+  background: linear-gradient(#8bd8ee, #d2f3f6);
+  box-shadow: 0 0.4cqw 0 #a47640;
+}
+.math-drops-water {
+  position: absolute;
+  inset: 68% 0 0;
+  background: linear-gradient(#68bed6, #3488ac);
+  clip-path: polygon(
+    0 8%,
+    5% 5%,
+    10% 8%,
+    15% 4%,
+    20% 7%,
+    25% 3%,
+    30% 7%,
+    35% 4%,
+    40% 8%,
+    45% 4%,
+    50% 7%,
+    55% 3%,
+    60% 7%,
+    65% 4%,
+    70% 8%,
+    75% 4%,
+    80% 7%,
+    85% 3%,
+    90% 8%,
+    95% 4%,
+    100% 7%,
+    100% 100%,
+    0 100%
+  );
+}
+.math-drops-threshold {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 72%;
+  z-index: 2;
+  border-top: 0.22cqw dashed #fff;
+}
+.math-drops-drop {
+  position: absolute;
+  top: var(--drop-top);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 10cqw;
+  height: 10cqw;
+  background: url("/assets/game-art/math-raindrop.webp") center / contain
+    no-repeat;
+  color: #234b60;
+  font-family: var(--font-baloo);
+  font-size: 2.2cqw;
+  font-weight: 900;
+  filter: drop-shadow(0 0.25cqw 0.2cqw #285c8060);
+  transition: top 0.1s linear;
+}
+.math-drops-splash {
+  position: absolute;
+  left: 50%;
+  top: 70%;
+  z-index: 3;
+  width: 10cqw;
+  height: 5cqw;
+  transform: translate(-50%, -50%);
+}
+.math-drops-splash span {
+  position: absolute;
+  left: 45%;
+  top: 60%;
+  width: 1cqw;
+  height: 1cqw;
+  border-radius: 50%;
+  background: #e8fdff;
+  animation: math-drops-pop 0.5s ease-out forwards;
+}
+.math-drops-splash span:nth-child(1) {
+  --splash-x: -4cqw;
+  --splash-y: -2cqw;
+}
+.math-drops-splash span:nth-child(2) {
+  --splash-x: -2cqw;
+  --splash-y: -4cqw;
+}
+.math-drops-splash span:nth-child(3) {
+  --splash-x: 0cqw;
+  --splash-y: -4.5cqw;
+}
+.math-drops-splash span:nth-child(4) {
+  --splash-x: 2cqw;
+  --splash-y: -4cqw;
+}
+.math-drops-splash span:nth-child(5) {
+  --splash-x: 4cqw;
+  --splash-y: -2cqw;
+}
+@keyframes math-drops-pop {
+  to {
+    transform: translate(var(--splash-x), var(--splash-y)) scale(0.3);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .math-drops-splash span {
+    animation-duration: 0.01ms;
+  }
+}
+.math-drops-dropText {
+  position: relative;
+}
+.math-drops-tip {
+  position: absolute;
+  top: 5%;
+  width: 100%;
+  text-align: center;
+  font-size: 1.1cqw;
+  color: #245974;
+  font-weight: 900;
+}
+.math-drops-answer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65cqw;
+}
+.math-drops-answer label {
+  font-size: 1.4cqw;
+  font-family: var(--font-baloo);
+}
+.math-drops-input {
+  width: 100%;
+  border: 0.2cqw solid #d3ad77;
+  border-radius: 0.8cqw;
+  background: #fff;
+  padding: 0.5cqw;
+  font-size: 1.8cqw;
+  text-align: center;
+  color: #493123;
+}
+.math-drops-keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.4cqw;
+}
+.math-drops-keypad button {
+  font-size: 1.5cqw;
+  padding: 0.4cqw;
+}
+.math-drops-feedback {
+  font-size: 1.05cqw;
+  font-weight: 850;
+  min-height: 2.4cqw;
+  color: #754e30;
+}
+.math-drops-intro {
+  position: absolute;
+  left: 33%;
+  top: 25%;
+  z-index: 3;
+  width: 37%;
+  text-align: center;
+}
+.math-drops-intro h2 {
+  font-size: 2.5cqw;
+}
+.math-drops-intro p {
+  margin: 1cqw 0;
+  font-size: 1.3cqw;
+}
+.math-drops-overlay {
+  position: absolute;
+  inset: 0;
+  background: #29382188;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+}
+.math-drops-win {
+  width: 42%;
+  text-align: center;
+  padding: 2cqw;
+}
+.math-drops-win h2 {
+  font-size: 3cqw;
+}
+.math-drops-win p {
+  font-size: 1.4cqw;
+  margin: 0.8cqw 0;
+}
+.math-drops-win button {
+  margin: 0.5cqw;
+}

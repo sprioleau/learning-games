@@ -188,3 +188,173 @@ describe("persisted picture matching", () => {
     expect(retried.state.stars).toBe(1);
   });
 });
+
+describe("server-authoritative learning activities", () => {
+  it.each([
+    ["number-trail", "addition", 100],
+    ["fraction-cafe", "default", 100],
+    ["math-drops", "division", 80],
+    ["word-builder", "default", 100],
+  ] as const)(
+    "validates %s answers and awards once",
+    async (gameId, mode, points) => {
+      vi.stubEnv("GAME_SERVER_SECRET", secret);
+      const t = app.createTest();
+      let result = await t.mutation(app.api.players.command, {
+        secret,
+        keyHash: "player",
+        sessionId: "round-one",
+        command: JSON.stringify({
+          kind: "activity-start",
+          gameId,
+          mode,
+          worldId: "jungle",
+        }),
+      });
+      let session = result.state.activitySessions.find(
+        (item) => item.gameId === gameId,
+      )!;
+      const incorrect = await t.mutation(app.api.players.command, {
+        secret,
+        keyHash: "player",
+        sessionId: "unused",
+        command: JSON.stringify({
+          kind: "activity-answer",
+          gameId,
+          sessionId: session.id,
+          expectedRevision: 0,
+          answer: "incorrect",
+        }),
+      });
+      expect(incorrect.outcome).toBe("incorrect");
+      expect(incorrect.state.stars).toBe(0);
+      let lastCommand = "";
+      while (session.phase === "playing") {
+        const question = session.questions[session.cursor];
+        const answer =
+          gameId === "fraction-cafe"
+            ? Array.from(
+                { length: question.answer as number },
+                (_, index) => index,
+              )
+            : question.answer;
+        lastCommand = JSON.stringify({
+          kind: "activity-answer",
+          gameId,
+          sessionId: session.id,
+          expectedRevision: session.revision,
+          answer,
+        });
+        result = await t.mutation(app.api.players.command, {
+          secret,
+          keyHash: "player",
+          sessionId: "unused",
+          command: lastCommand,
+        });
+        session = result.state.activitySessions.find(
+          (item) => item.gameId === gameId,
+        )!;
+      }
+      expect(result.outcome).toBe("won");
+      expect(session.answers).toHaveLength(session.questions.length);
+      expect(result.state.stars).toBe(1);
+      expect(result.state.points).toBe(points);
+      const retried = await t.mutation(app.api.players.command, {
+        secret,
+        keyHash: "player",
+        sessionId: "unused",
+        command: lastCommand,
+      });
+      expect(retried.outcome).toBe("ignored");
+      expect(retried.state.stars).toBe(1);
+      expect(
+        (await t.query(app.api.players.load, { secret, keyHash: "player" }))
+          .activitySessions,
+      ).toEqual(result.state.activitySessions);
+    },
+  );
+  it("replaces an expired math drop without credit and ignores duplicate skips", async () => {
+    const t = app.createTest();
+    const base = { secret, keyHash: "skip-player", sessionId: "drop-round" };
+    const started = await t.mutation(app.api.players.command, {
+      ...base,
+      command: JSON.stringify({
+        kind: "activity-start",
+        gameId: "math-drops",
+        mode: "addition",
+        worldId: "jungle",
+      }),
+    });
+    const before = started.state.activitySessions[0];
+    const command = JSON.stringify({
+      kind: "activity-skip",
+      gameId: "math-drops",
+      sessionId: before.id,
+      expectedRevision: before.revision,
+    });
+    const skipped = await t.mutation(app.api.players.command, {
+      ...base,
+      command,
+    });
+    const after = skipped.state.activitySessions[0];
+    expect(skipped.outcome).toBe("skipped");
+    expect(after.questions[0].prompt).not.toBe(before.questions[0].prompt);
+    expect(after.cursor).toBe(0);
+    expect(skipped.state.stars).toBe(0);
+    const retried = await t.mutation(app.api.players.command, {
+      ...base,
+      command,
+    });
+    expect(retried.outcome).toBe("ignored");
+    expect(retried.state.activitySessions[0]).toEqual(after);
+  });
+  it("rejects impossible modes, locked worlds, and forged answers", async () => {
+    vi.stubEnv("GAME_SERVER_SECRET", secret);
+    const t = app.createTest();
+    const base = { secret, keyHash: "player", sessionId: "round" };
+    await expect(
+      t.mutation(app.api.players.command, {
+        ...base,
+        command: JSON.stringify({
+          kind: "activity-start",
+          gameId: "fraction-cafe",
+          mode: "division",
+          worldId: "jungle",
+        }),
+      }),
+    ).rejects.toThrow("Invalid activity mode");
+    await expect(
+      t.mutation(app.api.players.command, {
+        ...base,
+        command: JSON.stringify({
+          kind: "activity-start",
+          gameId: "number-trail",
+          mode: "addition",
+          worldId: "desert",
+        }),
+      }),
+    ).rejects.toThrow("World locked");
+    const started = await t.mutation(app.api.players.command, {
+      ...base,
+      command: JSON.stringify({
+        kind: "activity-start",
+        gameId: "fraction-cafe",
+        mode: "default",
+        worldId: "jungle",
+      }),
+    });
+    const question = started.state.activitySessions[0].questions[0];
+    const forged = await t.mutation(app.api.players.command, {
+      ...base,
+      command: JSON.stringify({
+        kind: "activity-answer",
+        gameId: "fraction-cafe",
+        sessionId: "round",
+        expectedRevision: 0,
+        answer: question.answer,
+      }),
+    });
+    expect(forged.outcome).toBe("incorrect");
+    expect(forged.state.stars).toBe(0);
+  });
+});

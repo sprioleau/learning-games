@@ -1,0 +1,119 @@
+.word-builder-mascot {
+  position: absolute;
+  left: 2%;
+  bottom: 5%;
+  width: 29%;
+  z-index: 2;
+}
+.word-builder-panel {
+  position: absolute;
+  left: 31%;
+  top: 17%;
+  width: 63%;
+  height: 73%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6cqw;
+  padding: 1cqw;
+  text-align: center;
+}
+.word-builder-panel h2 {
+  font-size: 2.3cqw;
+  font-family: var(--font-heading);
+  line-height: 1;
+}
+.word-builder-panel p {
+  font-size: 1.1cqw;
+  font-weight: 800;
+}
+.word-builder-panel .play-button {
+  font-size: 1.3cqw !important;
+  padding: 0.5cqw 1.5cqw !important;
+}
+.word-builder-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1cqw;
+  height: 9cqw;
+}
+.word-builder-prompt img {
+  width: 9cqw;
+  height: 9cqw;
+  object-fit: contain;
+}
+.word-builder-prompt > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5cqw;
+}
+.word-builder-prompt button {
+  font-size: 1.1cqw;
+  height: auto;
+  padding: 0.4cqw 0.9cqw;
+}
+.word-builder-answer,
+.word-builder-letters {
+  display: flex;
+  justify-content: center;
+  gap: 0.5cqw;
+}
+.word-builder-answer span,
+.word-builder-answer button,
+.word-builder-letters button {
+  display: grid;
+  place-items: center;
+  width: 3.2cqw;
+  height: 3.2cqw;
+  border: 0.15cqw solid #c89754;
+  border-radius: 0.6cqw;
+  background: #fffaf0;
+  color: #593a25;
+  font: 900 2cqw var(--font-heading);
+}
+.word-builder-answer span {
+  border-style: dashed;
+  background: #f4dfb7;
+}
+.word-builder-letters button {
+  background: #ecd4ff;
+}
+.word-builder-letters button:disabled {
+  opacity: 0.35;
+}
+.word-builder-message {
+  min-height: 1.4cqw;
+  margin: 0;
+}
+
+.word-builder-letters button {
+  touch-action: none;
+  cursor: grab;
+}
+.word-builder-letters button.word-builder-dragging {
+  opacity: 0.6;
+  cursor: grabbing;
+}
+.word-builder-answer {
+  min-width: 15cqw;
+  min-height: 4cqw;
+  align-items: center;
+}
+
+.word-builder-drag-ghost {
+  position: fixed;
+  z-index: 9999;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  border: 2px solid #c89754;
+  border-radius: 12px;
+  background: #ecd4ff;
+  color: #593a25;
+  font-family: var(--font-heading);
+  font-weight: 900;
+  box-shadow: 0 6px 15px #3b2a2355;
+}

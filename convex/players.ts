@@ -4,6 +4,7 @@ import {
   createPlayerState,
   awardCompletion,
   awardMatchingCompletion,
+  saveActivitySession,
   playerStateSchema,
 } from "../src/lib/platform/progress";
 import { commandSchema } from "../src/lib/platform/commands";
@@ -13,6 +14,11 @@ import {
   createMatchingSession,
   flipMatchingCard,
 } from "../src/lib/games/matching";
+import {
+  answerActivity,
+  createActivitySession,
+  skipMathDrop,
+} from "../src/lib/games/activity";
 import { isWorldUnlocked } from "../src/lib/games/worlds";
 
 function authorize(secret: string) {
@@ -49,7 +55,8 @@ export const command = mutation({
       .withIndex("by_key", (q) => q.eq("keyHash", args.keyHash))
       .unique();
     let state = playerStateSchema.parse(player?.state ?? createPlayerState());
-    let outcome: "correct" | "incorrect" | "won" | "ignored" | null = null;
+    let outcome:
+      "correct" | "incorrect" | "won" | "ignored" | "skipped" | null = null;
     if (input.kind === "options") state = { ...state, options: input.options };
     if (input.kind === "start") {
       if (!args.hasAdminAccess && !isWorldUnlocked(input.worldId, state.stars))
@@ -104,6 +111,46 @@ export const command = mutation({
         state = awardMatchingCompletion(state, move.session);
         outcome = move.outcome === "flip" ? null : move.outcome;
       } else state = { ...state, matchingSession: clearMatchingCards(session) };
+    }
+    if (input.kind === "activity-start") {
+      if (!args.hasAdminAccess && !isWorldUnlocked(input.worldId, state.stars))
+        throw new Error("World locked");
+      const session = createActivitySession(
+        args.sessionId,
+        input.gameId,
+        input.worldId,
+        input.mode,
+      );
+      state = saveActivitySession(state, session);
+    }
+    if (input.kind === "activity-answer") {
+      const session = state.activitySessions.find(
+        (item) => item.gameId === input.gameId,
+      );
+      if (
+        !session ||
+        session.id !== input.sessionId ||
+        session.revision !== input.expectedRevision
+      )
+        return { state, outcome: "ignored" as const };
+      const result = answerActivity(session, input.answer);
+      outcome = result.outcome;
+      state = saveActivitySession(state, result.session);
+    }
+    if (input.kind === "activity-skip") {
+      const session = state.activitySessions.find(
+        (item) => item.gameId === input.gameId,
+      );
+      if (
+        !session ||
+        session.id !== input.sessionId ||
+        session.revision !== input.expectedRevision
+      )
+        return { state, outcome: "ignored" as const };
+      const next = skipMathDrop(session);
+      if (!next) return { state, outcome: "ignored" as const };
+      state = saveActivitySession(state, next);
+      outcome = "skipped";
     }
     if (player) await ctx.db.patch(player._id, { state });
     else await ctx.db.insert("players", { keyHash: args.keyHash, state });

@@ -1,9 +1,11 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   Compass,
+  ChevronLeft,
+  ChevronRight,
   Gamepad2,
   HelpCircle,
   Home,
@@ -29,10 +31,12 @@ import {
 import { getWorld, worlds, type WorldId } from "@/lib/games/worlds";
 import { prepareGameAudio } from "@/lib/platform/audio";
 import { artwork } from "@/lib/games/artwork";
+import { gameRegistry } from "@/lib/platform/contracts";
 import { Mascot } from "./mascot";
 
 export function Hub() {
   const router = useRouter();
+  const carousel = useRef<HTMLDivElement>(null);
   const { state, storage, isBusy, isAdminMode, error, send, reload } =
     useGamePlatform();
   const [view, setView] = useState<"games" | "map" | "stars">("games");
@@ -41,7 +45,11 @@ export function Hub() {
   const stars = state?.stars ?? 0;
   const nextWorld = worlds.find((world) => world.starsRequired > stars);
   const hasActiveSession = state?.session?.phase === "playing";
-  const latestSession = [state?.session, state?.matchingSession]
+  const latestSession = [
+    state?.session,
+    state?.matchingSession,
+    ...(state?.activitySessions ?? []),
+  ]
     .filter((session) => session != null)
     .sort((a, b) => b.createdAt - a.createdAt)[0];
   const currentWorld = getWorld(latestSession?.worldId ?? "jungle");
@@ -119,26 +127,36 @@ export function Hub() {
           </div>
           {view === "games" && (
             <>
-              <button
-                type="button"
-                className="world-preview parchment-panel"
-                onClick={() => setView("map")}
-              >
-                <Image
-                  src={artwork.islands[currentWorld.id]}
-                  alt=""
-                  width={160}
-                  height={160}
-                />
-                <span>
-                  <small>YOUR LATEST ADVENTURE</small>
-                  <strong>{currentWorld.shortName}</strong>
-                  <span>Explore the map →</span>
-                </span>
-              </button>
               <section className="game-picker" aria-label="Choose a game">
                 <h2>Choose your game!</h2>
+                <div className="game-carousel-controls">
+                  <Button
+                    variant="outline"
+                    aria-label="Previous games"
+                    onClick={() =>
+                      carousel.current?.scrollBy({
+                        left: -carousel.current.clientWidth * 0.7,
+                        behavior: "smooth",
+                      })
+                    }
+                  >
+                    <ChevronLeft />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    aria-label="More games"
+                    onClick={() =>
+                      carousel.current?.scrollBy({
+                        left: carousel.current.clientWidth * 0.7,
+                        behavior: "smooth",
+                      })
+                    }
+                  >
+                    <ChevronRight />
+                  </Button>
+                </div>
                 <div
+                  ref={carousel}
                   className="game-carousel"
                   tabIndex={0}
                   aria-label="Games, scroll for more"
@@ -225,6 +243,67 @@ export function Hub() {
                       ✦
                     </span>
                   </article>
+                  {[
+                    {
+                      title: "Math Drops",
+                      description: "Catch a falling math challenge!",
+                      symbol: "3 + 2",
+                      tone: "blue",
+                      path: "/play/math-drops",
+                    },
+                    {
+                      title: "Word Builder",
+                      description: "Listen, tap, and spell!",
+                      symbol: "A B C",
+                      tone: "pink",
+                      path: "/play/word-builder",
+                    },
+                    {
+                      title: "Fraction Café",
+                      description: "Share a tasty fraction!",
+                      symbol: "½",
+                      tone: "orange",
+                      path: "/play/fraction-cafe",
+                    },
+                    {
+                      title: "Number Trail",
+                      description: "Take a hop along the numbers!",
+                      symbol: "1  2  3",
+                      tone: "green",
+                      path: "/play/number-trail",
+                    },
+                    {
+                      title: "Jungle Jigsaw",
+                      description: "Piece together a jungle adventure!",
+                      symbol: "🧩",
+                      tone: "green",
+                      path: "/play/jigsaw",
+                    },
+                  ].map((game) => (
+                    <article
+                      key={game.path}
+                      className={`bingo-game-sign game-tile-${game.tone}`}
+                    >
+                      <span className="game-sign-kicker">
+                        A LEARNING ADVENTURE
+                      </span>
+                      <div className="game-tile-symbol" aria-hidden="true">
+                        {game.symbol}
+                      </div>
+                      <h2>{game.title}</h2>
+                      <p>{game.description}</p>
+                      <Button
+                        className="play-button"
+                        aria-label={`Play ${game.title}`}
+                        onClick={() => {
+                          prepareGameAudio();
+                          router.push(game.path);
+                        }}
+                      >
+                        <Play fill="currentColor" /> Play
+                      </Button>
+                    </article>
+                  ))}
                 </div>
               </section>
             </>
@@ -291,6 +370,25 @@ export function Hub() {
             </section>
           )}
           <div className="journey-milestone parchment-panel">
+            {view === "games" && (
+              <button
+                type="button"
+                className="world-preview"
+                onClick={() => setView("map")}
+              >
+                <Image
+                  src={artwork.islands[currentWorld.id]}
+                  alt=""
+                  width={160}
+                  height={160}
+                />
+                <span>
+                  <small>YOUR LATEST ADVENTURE</small>
+                  <strong>{currentWorld.shortName}</strong>
+                  <span>Explore the map →</span>
+                </span>
+              </button>
+            )}
             <Image src={artwork.rewardStar} alt="" width={80} height={80} />
             <div>
               <strong>
@@ -339,9 +437,8 @@ export function Hub() {
               entries={(state?.results ?? []).map((result) => ({
                 id: result.sessionId,
                 label:
-                  result.gameId === "card-matching"
-                    ? "Picture Pairs"
-                    : "Word Bingo",
+                  gameRegistry.find((game) => game.id === result.gameId)
+                    ?.title ?? "Adventure",
                 points: result.points,
                 completedAt: result.completedAt,
               }))}

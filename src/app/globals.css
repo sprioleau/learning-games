@@ -317,7 +317,6 @@ svg {
   width: 42%;
   text-align: center;
   z-index: 3;
-  background: radial-gradient(ellipse, #fff9e9 45%, #fff9e900 72%);
   padding: 1.4cqw 0 2cqw;
 }
 .explorer-greeting h1 {
@@ -2100,5 +2099,172 @@ button.word-prompt:hover:enabled {
   width: 47%;
 }
 .view-map .adventure-map {
-  background: none;
+  background: url("/assets/map/explorer-parchment.webp") center / 100% 100%
+    no-repeat;
+}
+
+.game-carousel-controls {
+  position: absolute;
+  right: 1cqw;
+  top: 0;
+  display: flex;
+  gap: 0.35cqw;
+}
+.game-carousel-controls button {
+  width: 2.3cqw;
+  height: 2.3cqw;
+  min-height: 0;
+  padding: 0;
+  border-radius: 50%;
+  background: #fff5dc;
+  border: 0.12cqw solid #dfbd81;
+  color: #5b3b25;
+}
+.game-carousel-controls svg {
+  width: 1.4cqw;
+  height: 1.4cqw;
+}
+.game-tile-symbol {
+  display: grid;
+  place-items: center;
+  margin: 1cqw auto;
+  width: 8cqw;
+  height: 7cqw;
+  border-radius: 2cqw;
+  background: #fff8e7;
+  color: #544034;
+  font: 900 2.2cqw var(--font-heading);
+  box-shadow: 0 0.25cqw #98784c55;
+}
+.view-games .game-carousel .game-tile-blue {
+  background: linear-gradient(145deg, #b2ebfa, #71c8e9);
+}
+.view-games .game-carousel .game-tile-pink {
+  background: linear-gradient(145deg, #ffdddf, #f5a9bd);
+}
+.view-games .game-carousel .game-tile-orange {
+  background: linear-gradient(145deg, #ffe2a3, #f6ae6d);
+}
+.view-games .game-carousel .game-tile-green {
+  background: linear-gradient(145deg, #d5f0af, #a3d27c);
+}
+.game-carousel {
+  scroll-snap-type: x mandatory;
+}
+.game-carousel > article {
+  scroll-snap-align: start;
+}
+
+/* The home HUD groups world and star progress beneath a compact game shelf. */
+.explorer-greeting {
+  background: #fff5dc;
+  border: 0.15cqw solid #e7c58c;
+  border-radius: 1.5cqw;
+  box-shadow: 0 0.25cqw 0.15cqw #68472040;
+}
+.view-games .explorer-greeting {
+  left: 3%;
+  top: 19%;
+  width: 26%;
+  padding: 0.75cqw 0.5cqw;
+}
+.view-games .explorer-greeting h1 {
+  font-size: 2.7cqw;
+}
+.view-games .explorer-greeting p {
+  font-size: 1.1cqw;
+}
+.view-games .hub-mascot {
+  width: 28%;
+  left: 1%;
+  bottom: 15%;
+}
+.game-picker {
+  left: 30%;
+  top: 25%;
+  width: 70%;
+  height: 51%;
+}
+.game-picker > h2 {
+  display: inline-block;
+  margin-left: 1.8cqw;
+  padding: 0.3cqw 1.2cqw;
+  background: #fff5dc;
+  border: 0.14cqw solid #e7c58c;
+  border-radius: 1.2cqw;
+  font-size: 1.9cqw;
+}
+.game-carousel {
+  height: 84%;
+  padding: 0.8cqw 1.8cqw 1.3cqw;
+  -webkit-mask-image: linear-gradient(to right, transparent, black 1.3cqw);
+  mask-image: linear-gradient(to right, transparent, black 1.3cqw);
+}
+.view-games .game-carousel .bingo-game-sign {
+  flex-basis: 31%;
+  padding: 0.8cqw;
+}
+.view-games .game-carousel .bingo-game-sign h2 {
+  font-size: 1.8cqw;
+}
+.view-games .game-carousel .bingo-game-sign p {
+  font-size: 0.9cqw;
+}
+.view-games .game-carousel .bingo-game-sign .play-button {
+  font-size: 1.2cqw !important;
+  padding: 0.45cqw !important;
+}
+.view-games .game-carousel .bingo-sign-icon {
+  width: 4.4cqw;
+  height: 4.4cqw;
+}
+.game-tile-symbol {
+  width: 5.4cqw;
+  height: 4.6cqw;
+  margin: 0.6cqw auto;
+  font-size: 1.6cqw;
+}
+.matching-sign-icon {
+  margin: 0.6cqw 0;
+}
+.view-games .journey-milestone {
+  left: 4%;
+  bottom: 5%;
+  width: 88%;
+  height: 10%;
+  transform: none;
+}
+.view-games .world-preview {
+  position: static;
+  flex: 0 0 29%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  text-align: left;
+  cursor: pointer;
+  border: 0;
+  border-right: 0.12cqw solid #dec397;
+  background: transparent;
+  color: #49301e;
+  padding: 0 0.5cqw;
+}
+.view-games .world-preview img {
+  width: 5cqw;
+  height: 100%;
+  object-fit: contain;
+}
+.view-games .world-preview strong {
+  font-size: 1.4cqw;
+}
+.view-games .world-preview small {
+  font-size: 0.65cqw;
+}
+.view-games .world-preview > span > span {
+  font-size: 0.8cqw;
+}
+.view-games .journey-milestone > img {
+  margin-left: 1cqw;
+}
+.game-carousel-controls {
+  right: 2cqw;
 }

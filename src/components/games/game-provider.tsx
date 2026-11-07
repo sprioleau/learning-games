@@ -12,6 +12,7 @@ import {
   playerStateSchema,
   awardCompletion,
   awardMatchingCompletion,
+  saveActivitySession,
   type PlayerState,
 } from "@/lib/platform/progress";
 import {
@@ -25,12 +26,17 @@ import {
   flipMatchingCard,
   type MatchingOutcome,
 } from "@/lib/games/matching";
+import {
+  answerActivity,
+  createActivitySession,
+  skipMathDrop,
+} from "@/lib/games/activity";
 import { isWorldUnlocked } from "@/lib/games/worlds";
 import { commandSchema, type GameCommand } from "@/lib/platform/commands";
 
 type CommandResponse = {
   state: PlayerState;
-  outcome: MoveResult["outcome"] | null;
+  outcome: MoveResult["outcome"] | "skipped" | null;
 };
 type MoveCommand = Extract<GameCommand, { kind: "move" }>;
 type MatchingCommand = Extract<
@@ -201,6 +207,54 @@ export function GameProvider({ children }: { children: ReactNode }) {
               input.pairCount,
             ),
           };
+        }
+        if (input.kind === "activity-start") {
+          if (!isAdminMode && !isWorldUnlocked(input.worldId, state.stars))
+            throw new Error("World locked");
+          next = saveActivitySession(
+            state,
+            createActivitySession(
+              crypto.randomUUID(),
+              input.gameId,
+              input.worldId,
+              input.mode,
+            ),
+          );
+        }
+        if (input.kind === "activity-answer") {
+          const session = state.activitySessions.find(
+            (item) => item.gameId === input.gameId,
+          );
+          if (
+            !session ||
+            session.id !== input.sessionId ||
+            session.revision !== input.expectedRevision
+          )
+            outcome = "ignored";
+          else {
+            const move = answerActivity(session, input.answer);
+            next = saveActivitySession(state, move.session);
+            outcome = move.outcome;
+          }
+        }
+        if (input.kind === "activity-skip") {
+          const session = state.activitySessions.find(
+            (item) => item.gameId === input.gameId,
+          );
+          if (
+            !session ||
+            session.id !== input.sessionId ||
+            session.revision !== input.expectedRevision
+          )
+            outcome = "ignored";
+          else {
+            const replacement = skipMathDrop(session);
+            if (!replacement) outcome = "ignored";
+            else {
+              next = saveActivitySession(state, replacement);
+              outcome = "skipped";
+            }
+          }
         }
         if (
           input.kind === "move" &&

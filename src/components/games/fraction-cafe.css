@@ -1,0 +1,188 @@
+.fraction-cafe-scene .fraction-cafe-mascot {
+  position: absolute;
+  width: 28%;
+  left: 1%;
+  bottom: 4%;
+  z-index: 3;
+}
+.fraction-cafe-panel {
+  position: absolute;
+  z-index: 4;
+  left: 29%;
+  top: 19%;
+  width: 66%;
+  height: 71%;
+  padding: 2cqw;
+  text-align: center;
+}
+.fraction-cafe-intro {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  height: 100%;
+  gap: 1.4cqw;
+}
+.fraction-cafe-intro h2,
+.fraction-cafe-order h2 {
+  font-family: var(--font-heading);
+  font-size: 3cqw;
+  line-height: 1.05;
+}
+.fraction-cafe-intro p,
+.fraction-cafe-order p {
+  font-size: 1.3cqw;
+  font-weight: 800;
+}
+.fraction-cafe-back {
+  color: #356b5a;
+  font-weight: 800;
+  font-size: 1.2cqw;
+  text-decoration: underline;
+}
+.fraction-cafe-order {
+  position: absolute;
+  left: 2%;
+  top: 12%;
+  width: 40%;
+}
+.fraction-cafe-order p {
+  margin-top: 1cqw;
+}
+.fraction-cafe-fraction {
+  display: inline-block;
+  font-size: 4cqw;
+  color: #af5d39;
+  font-family: var(--font-heading);
+}
+.fraction-cafe-plate {
+  position: absolute;
+  top: 10%;
+  left: 46%;
+  width: 25cqw;
+  height: 25cqw;
+  border: 1.2cqw solid #f4d49d;
+  border-radius: 50%;
+  background: #fff9e9;
+  box-shadow: 0 0.4cqw 0 #d39d65;
+}
+.fraction-cafe-slice {
+  position: absolute !important;
+  width: 50% !important;
+  height: 50% !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  left: 50%;
+  top: 0;
+  border: 0.15cqw solid #c0763f !important;
+  border-radius: 0 100% 0 0 !important;
+  transform-origin: 0% 100%;
+  transform: rotate(calc(var(--slice-index) * 360deg / var(--slice-count)));
+  background: #f9b85f !important;
+  color: #5d371d !important;
+  font-size: 2cqw !important;
+}
+.fraction-cafe-slice.fraction-cafe-selected {
+  background: #80c68e !important;
+}
+.fraction-cafe-slice span {
+  transform: rotate(calc(var(--slice-index) * -360deg / var(--slice-count)));
+}
+.fraction-cafe-controls {
+  position: absolute;
+  bottom: 6%;
+  left: 4%;
+  right: 4%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5cqw;
+}
+.fraction-cafe-controls p {
+  font-size: 1.1cqw;
+  font-weight: 800;
+  max-width: 55%;
+}
+.fraction-cafe-controls button {
+  font-size: 1.4cqw !important;
+}
+
+.fraction-cafe-plate[data-pieces="2"] .fraction-cafe-slice {
+  left: 0;
+  top: 0;
+  width: 50% !important;
+  height: 100% !important;
+  border-radius: 100% 0 0 100% / 50% 0 0 50% !important;
+  transform: none;
+}
+.fraction-cafe-plate[data-pieces="2"] .fraction-cafe-slice:nth-child(2) {
+  left: 50%;
+  border-radius: 0 100% 100% 0 / 0 50% 50% 0 !important;
+}
+.fraction-cafe-plate[data-pieces="2"] .fraction-cafe-slice span {
+  transform: none;
+}
+
+.fraction-cafe-food {
+  width: 9cqw;
+  height: 9cqw;
+  object-fit: contain;
+}
+
+/* Food art sits beneath equal-sized, independently selectable regions. */
+.fraction-cafe-plate {
+  overflow: hidden;
+  background: url("/assets/game-art/fraction-cafe-round-pizza.webp") center /
+    cover no-repeat;
+}
+.fraction-cafe-slice {
+  background: #fff8e622 !important;
+  border: 0.16cqw solid #fff9e8cc !important;
+}
+.fraction-cafe-slice.fraction-cafe-selected {
+  background: #58ac7788 !important;
+}
+.fraction-cafe-slice span {
+  display: grid;
+  place-items: center;
+  width: 4cqw;
+  height: 4cqw;
+  border-radius: 50%;
+  color: #fff;
+  background: #267b4e;
+  font-size: 3cqw;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 0.2cqw 0 #175633;
+}
+.fraction-cafe-slice span:empty {
+  display: none;
+}
+.fraction-cafe-plate[data-shape="square"],
+.fraction-cafe-plate[data-shape="rectangle"] {
+  display: grid;
+  border-radius: 1cqw;
+  background-image: url("/assets/game-art/fraction-cafe-cake.webp");
+}
+.fraction-cafe-plate[data-shape="square"] {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+}
+.fraction-cafe-plate[data-shape="rectangle"] {
+  top: 18%;
+  height: 17cqw;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: 1fr;
+}
+.fraction-cafe-plate[data-shape="square"] .fraction-cafe-slice,
+.fraction-cafe-plate[data-shape="rectangle"] .fraction-cafe-slice {
+  position: static !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+  transform: none !important;
+}
+.fraction-cafe-plate[data-shape="square"] .fraction-cafe-slice span,
+.fraction-cafe-plate[data-shape="rectangle"] .fraction-cafe-slice span {
+  transform: none;
+}

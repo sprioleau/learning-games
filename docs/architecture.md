@@ -1,11 +1,12 @@
 # Learning Games foundation
 
-The first slice is deliberately one complete solo game. Multiplayer has typed room, participant, command, and revision contracts, but no live rooms or invitations yet. The next game should prove these abstractions before they grow further.
+The hub contains several solo games sharing anonymous progress, rewards, and scene components. Multiplayer has typed room, participant, command, and revision contracts, but no live rooms or invitations yet.
 
 ## Boundaries
 
 - `src/lib/games/bingo.ts`: pure, serializable bingo rules, shared by client fallback and authoritative Convex backend. Exactly 25 distinct words; no free square. Prompts are shuffled separately from the board. Five across, down, or either diagonal ends the game immediately.
 - `src/lib/games/options.ts`: validated, versioned modifiers and metadata. Rule options (`wordSet`) are captured in sessions. Assistance (`hasWordHints`, `speechRate`) and presentation (`isSoundEnabled`, `isCelebrationEnabled`) are current player preferences. Rule changes apply to the next board. Assistance never reduces rewards.
+- `src/lib/games/activity.ts`: shared, versioned activity sessions for Word Builder, Fraction Café, Number Trail, and Math Drops. Each game keeps its own server-generated questions and revision, and the server validates answers and awards the completion reward once. The browser can restore an in-progress activity after reload. Math Drops movement and its timer are presentation state; an expired drop requests a different question without advancing the score.
 - `src/lib/games/worlds.ts`: declarative theme metadata. Jungle starts open, followed by desert at 5 stars, arctic at 10, city at 15, and ocean at 20. Themes change scenery and colors, not learning difficulty.
 - `src/lib/platform/progress.ts`: one star per completed session, ten points per correct word plus 50 for bingo. No penalties, daily streak pressure, or time limits. Completion IDs prevent duplicate rewards. The current session is the only playable session, so trimming score history to 100 cannot make an old session replayable.
 - `src/lib/platform/contracts.ts`: game registry, room and membership contracts, monotonic revisions, generic command envelope, and leaderboard entries. Future multiplayer should add a Convex subscription transport, private invite rooms, membership checks, host lifecycle, reconnect handling, and authoritative moves. There is no public matchmaking or chat.
@@ -46,5 +47,4 @@ Test accounts are anonymous browser contexts in the dev backend. The tests do no
 
 - Test the supplied artwork, speech, browser zoom, and touch on real iPad/Safari and Android hardware.
 - Add curated, educator-reviewed word packs and recorded US-English prompts if consistent offline voices are needed. Browser speech currently varies by device and may use a platform voice service.
-- Add a second game using the same options, sessions, rewards, and theme contracts.
 - Implement private multiplayer as a focused slice, using per-player authenticated subscriptions and room authorization rather than exposing the current server secret to clients.

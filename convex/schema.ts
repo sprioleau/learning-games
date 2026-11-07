@@ -38,6 +38,42 @@ export const matchingSessionValidator = v.object({
   createdAt: v.number(),
   completedAt: v.union(v.number(), v.null()),
 });
+export const activityAnswerValidator = v.union(
+  v.number(),
+  v.string(),
+  v.array(v.number()),
+);
+export const activitySessionValidator = v.object({
+  id: v.string(),
+  gameId: v.union(
+    v.literal("number-trail"),
+    v.literal("fraction-cafe"),
+    v.literal("math-drops"),
+    v.literal("word-builder"),
+  ),
+  worldId: v.string(),
+  mode: v.union(
+    v.literal("addition"),
+    v.literal("subtraction"),
+    v.literal("mixed"),
+    v.literal("multiplication"),
+    v.literal("division"),
+    v.literal("default"),
+  ),
+  questions: v.array(
+    v.object({
+      prompt: v.string(),
+      answer: activityAnswerValidator,
+      payload: v.string(),
+    }),
+  ),
+  answers: v.array(activityAnswerValidator),
+  cursor: v.number(),
+  revision: v.number(),
+  phase: v.union(v.literal("playing"), v.literal("won")),
+  createdAt: v.number(),
+  completedAt: v.union(v.number(), v.null()),
+});
 export default defineSchema({
   players: defineTable({
     keyHash: v.string(),
@@ -48,6 +84,7 @@ export default defineSchema({
       options: optionsValidator,
       session: v.union(sessionValidator, v.null()),
       matchingSession: v.optional(v.union(matchingSessionValidator, v.null())),
+      activitySessions: v.optional(v.array(activitySessionValidator)),
       results: v.array(
         v.object({
           sessionId: v.string(),

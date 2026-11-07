@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  activityAnswerSchema,
+  activityGameSchema,
+  activityModeSchema,
+} from "../games/activity";
 import { matchingPairCountSchema } from "../games/matching";
 import { gameOptionsSchema } from "../games/options";
 export const commandSchema = z.discriminatedUnion("kind", [
@@ -26,6 +31,25 @@ export const commandSchema = z.discriminatedUnion("kind", [
   }),
   z.object({
     kind: z.literal("matching-clear"),
+    sessionId: z.string(),
+    expectedRevision: z.number().int().min(0),
+  }),
+  z.object({
+    kind: z.literal("activity-start"),
+    gameId: activityGameSchema,
+    mode: activityModeSchema,
+    worldId: z.enum(["jungle", "desert", "arctic", "city", "ocean"]),
+  }),
+  z.object({
+    kind: z.literal("activity-answer"),
+    gameId: activityGameSchema,
+    sessionId: z.string(),
+    expectedRevision: z.number().int().min(0),
+    answer: activityAnswerSchema,
+  }),
+  z.object({
+    kind: z.literal("activity-skip"),
+    gameId: z.literal("math-drops"),
     sessionId: z.string(),
     expectedRevision: z.number().int().min(0),
   }),

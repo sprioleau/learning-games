@@ -42,6 +42,46 @@ export type GameDefinition = {
 };
 export const gameRegistry: GameDefinition[] = [
   {
+    id: "jigsaw",
+    title: "Jungle Jigsaw",
+    minAge: 5,
+    maxAge: 10,
+    modes: ["solo"],
+    hasCanvas: true,
+  },
+  {
+    id: "math-drops",
+    title: "Math Drops",
+    minAge: 5,
+    maxAge: 10,
+    modes: ["solo"],
+    hasCanvas: false,
+  },
+  {
+    id: "word-builder",
+    title: "Word Builder",
+    minAge: 5,
+    maxAge: 8,
+    modes: ["solo"],
+    hasCanvas: false,
+  },
+  {
+    id: "fraction-cafe",
+    title: "Fraction Café",
+    minAge: 6,
+    maxAge: 10,
+    modes: ["solo"],
+    hasCanvas: false,
+  },
+  {
+    id: "number-trail",
+    title: "Number Trail",
+    minAge: 5,
+    maxAge: 9,
+    modes: ["solo"],
+    hasCanvas: false,
+  },
+  {
     id: "card-matching",
     title: "Picture Pairs",
     minAge: 4,
