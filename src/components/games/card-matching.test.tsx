@@ -52,6 +52,45 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 describe("Picture Pairs", () => {
+  it("shows a single illustration for each saved placeholder pair without losing progress", async () => {
+    const state = createPlayerState();
+    const session = createMatchingSession(
+      "old-board",
+      "jungle",
+      Math.random,
+      Date.now(),
+      4,
+    );
+    session.board = [
+      "three-stars",
+      "three-stars",
+      "jungle",
+      "jungle",
+      "ocean",
+      "ocean",
+      "one-star",
+      "one-star",
+    ];
+    session.matched = [0, 1];
+    state.matchingSession = session;
+    localStorage.setItem("learning-games:player:v1", JSON.stringify(state));
+    render(
+      <GameProvider>
+        <CardMatching />
+      </GameProvider>,
+    );
+    const card = await screen.findByRole("button", {
+      name: "Card 1, crab, matched",
+    });
+    expect(
+      within(card).getAllByRole("presentation", { hidden: true }),
+    ).toHaveLength(1);
+    expect(
+      within(card).getByRole("presentation", { hidden: true }),
+    ).toHaveAttribute("src", expect.stringContaining("crab.png"));
+    expect(card).not.toHaveTextContent("✦");
+    expect(screen.getByText("1 / 4 pairs")).toBeInTheDocument();
+  });
   it("flips immediately, announces and sounds each card, hides a mismatch, and restores matched cards after reload", async () => {
     const state = createPlayerState();
     const session = createMatchingSession("test-matching", "jungle");

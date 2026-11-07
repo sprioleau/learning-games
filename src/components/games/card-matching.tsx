@@ -19,7 +19,7 @@ import {
 } from "@/components/scene/game-scene";
 import { Mascot } from "@/components/hub/mascot";
 import {
-  matchingFaces,
+  getMatchingPictureFace,
   matchingPairCounts,
   type MatchingPairCount,
 } from "@/lib/games/matching";
@@ -29,56 +29,15 @@ import { warmMatchingArtwork } from "@/lib/platform/artwork-cache";
 import { prepareGameAudio, playSound } from "@/lib/platform/audio";
 
 function getFaceLabel(face: string) {
-  if ((matchingFaces as readonly string[]).includes(face))
-    return face.replaceAll("-", " ");
-  if (face.endsWith("star") || face.endsWith("stars"))
-    return face.replaceAll("-", " ");
-  return `${getWorld(face).shortName} island`;
+  return getMatchingPictureFace(face).replaceAll("-", " ");
 }
 function CardFace({ face }: { face: string }) {
-  if ((matchingFaces as readonly string[]).includes(face)) {
-    return (
-      <Image
-        src={`/assets/picture-cards/${face}.png`}
-        alt=""
-        width={300}
-        height={300}
-        sizes="(max-width:720px) 15vw, 150px"
-      />
-    );
-  }
-  if (face.endsWith("star") || face.endsWith("stars")) {
-    const count =
-      [
-        "one-star",
-        "two-stars",
-        "three-stars",
-        "four-stars",
-        "five-stars",
-      ].indexOf(face) + 1;
-    return (
-      <span
-        className={`matching-stars matching-stars-${count}`}
-        aria-hidden="true"
-      >
-        {Array.from({ length: count }, (_, index) => (
-          <Image
-            key={index}
-            src={artwork.rewardStar}
-            alt=""
-            width={64}
-            height={64}
-          />
-        ))}
-      </span>
-    );
-  }
   return (
     <Image
-      src={artwork.islands[getWorld(face).id]}
+      src={`/assets/picture-cards/${getMatchingPictureFace(face)}.png`}
       alt=""
-      width={160}
-      height={160}
+      width={300}
+      height={300}
       sizes="(max-width:720px) 15vw, 150px"
     />
   );
@@ -304,9 +263,11 @@ export function CardMatching() {
                     }
                     onClick={() => chooseCard(index)}
                   >
-                    <span className="matching-card-back" aria-hidden="true">
-                      ✦
-                    </span>
+                    {!isRevealed && (
+                      <span className="matching-card-back" aria-hidden="true">
+                        ✦
+                      </span>
+                    )}
                     {isRevealed && (
                       <span className="matching-card-face">
                         <CardFace face={face} />

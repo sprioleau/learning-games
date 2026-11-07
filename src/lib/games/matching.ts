@@ -22,6 +22,21 @@ export const matchingFaces = [
   "treasure-chest",
   "tropical-fish",
 ] as const;
+const legacyPictureFaces: Record<string, (typeof matchingFaces)[number]> = {
+  jungle: "sloth",
+  desert: "camel",
+  arctic: "penguin",
+  city: "lighthouse",
+  ocean: "coral-reef",
+  "one-star": "sea-turtle",
+  "two-stars": "octopus",
+  "three-stars": "crab",
+  "four-stars": "dolphin",
+  "five-stars": "toucan",
+};
+export function getMatchingPictureFace(face: string): string {
+  return legacyPictureFaces[face] ?? face;
+}
 export const matchingPairCounts = [4, 6, 10] as const;
 export const matchingPairCountSchema = z.union([
   z.literal(4),

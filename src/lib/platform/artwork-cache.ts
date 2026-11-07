@@ -1,7 +1,7 @@
 "use client";
 import { getImageProps } from "next/image";
 import { artwork } from "@/lib/games/artwork";
-import { matchingFaces } from "@/lib/games/matching";
+import { getMatchingPictureFace, matchingFaces } from "@/lib/games/matching";
 import type { WorldId } from "@/lib/games/worlds";
 
 type ArtworkTask = {
@@ -99,9 +99,10 @@ export function warmGameArtwork(world: WorldId) {
 
 export function warmMatchingArtwork(board: string[]) {
   for (const face of new Set(board)) {
-    if (!(matchingFaces as readonly string[]).includes(face)) continue;
+    const picture = getMatchingPictureFace(face);
+    if (!(matchingFaces as readonly string[]).includes(picture)) continue;
     const task = makeTask(
-      `/assets/picture-cards/${face}.png`,
+      `/assets/picture-cards/${picture}.png`,
       300,
       300,
       "(max-width:720px) 15vw, 150px",

@@ -1845,30 +1845,6 @@ button.word-prompt:hover:enabled {
   height: 85%;
   object-fit: contain;
 }
-.matching-stars {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-wrap: wrap;
-  width: 76%;
-  height: 76%;
-  align-content: center;
-}
-.matching-stars img {
-  width: 38%;
-  height: auto;
-  object-fit: contain;
-}
-.matching-stars-1 img {
-  width: 70%;
-}
-.matching-stars-2 img {
-  width: 48%;
-}
-.matching-stars-4 img,
-.matching-stars-5 img {
-  width: 32%;
-}
 .matching-feedback {
   position: absolute;
   left: 31%;
