@@ -22,7 +22,13 @@ describe("Math Drops", () => {
       const panel = page.getByLabel("Falling math problem");
       await panel.getByText(/\d+ − \d+/).waitFor();
       const input = page.getByRole("textbox", { name: "Your answer" });
-      await input.focus();
+      await page.waitForFunction(
+        () =>
+          document.activeElement ===
+          document.querySelector(
+            '[aria-label="Your answer"], #math-drops-answer',
+          ),
+      );
       for (let count = 0; count < 8; count++) {
         const text = await panel.innerText();
         const parts = text.match(/(\d+) − (\d+)/);

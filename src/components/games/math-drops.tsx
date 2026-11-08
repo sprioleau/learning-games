@@ -87,6 +87,7 @@ export function MathDrops() {
       if (time <= 0) {
         window.clearInterval(timer);
         setIsSplashing(true);
+        playSound("incorrect", isSoundEnabled);
         setAnswer("");
         setMessage("Splash!");
         splashTimer = window.setTimeout(() => void skipExpiredDrop(), 500);
@@ -96,7 +97,14 @@ export function MathDrops() {
       window.clearInterval(timer);
       window.clearTimeout(splashTimer);
     };
-  }, [isPlaying, isPaused, isBusy, speed]);
+  }, [isPlaying, isPaused, isBusy, speed, isSoundEnabled]);
+  useEffect(() => {
+    if (!isPlaying || isPaused || isSplashing) return;
+    const frame = window.requestAnimationFrame(() =>
+      answerRef.current?.focus({ preventScroll: true }),
+    );
+    return () => window.cancelAnimationFrame(frame);
+  }, [isPlaying, isPaused, isSplashing]);
   async function startRound(mode: MathOperation = operation) {
     if (!state || isBusy) return;
     prepareGameAudio();
@@ -127,6 +135,15 @@ export function MathDrops() {
     )
       return;
     const submittedAnswer = Number(answer);
+    const isCorrect = submittedAnswer === question.answer;
+    playSound(
+      isCorrect
+        ? session.cursor + 1 === session.questions.length
+          ? "win"
+          : "correct"
+        : "incorrect",
+      isSoundEnabled,
+    );
     setAnswer("");
     answerRef.current?.focus({ preventScroll: true });
     const result = await send({
@@ -138,13 +155,10 @@ export function MathDrops() {
     });
     if (!result) return;
     if (result.outcome === "incorrect") {
-      playSound("incorrect", isSoundEnabled);
       setMessage("Not quite. Try again!");
     } else if (result.outcome === "won") {
       setMessage("You solved all eight problems!");
-      playSound("win", isSoundEnabled);
     } else if (result.outcome === "correct") {
-      playSound("correct", isSoundEnabled);
       setMessage("You got it! Here comes another.");
       remainingRef.current = speeds[speed];
       setRemaining(speeds[speed]);

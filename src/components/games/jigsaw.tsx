@@ -410,7 +410,23 @@ export function Jigsaw() {
     });
     const previous = piecesRef.current;
     publishPieces(next);
+    if (!didPlace && !isCancelled) {
+      const point = getPoint(event);
+      if (
+        point.x >= puzzleBoard.x &&
+        point.x <= puzzleBoard.x + puzzleBoard.size &&
+        point.y >= puzzleBoard.y &&
+        point.y <= puzzleBoard.y + puzzleBoard.size
+      ) {
+        setMessage("Not quite there yet. Try another spot!");
+        playSound("incorrect", state?.options.isSoundEnabled);
+      }
+    }
     if (didPlace && savedSession) {
+      playSound(
+        next.every((piece) => piece.isPlaced) ? "win" : "correct",
+        state?.options.isSoundEnabled,
+      );
       const result = await send({
         kind: "activity-answer",
         gameId: "jigsaw",
@@ -431,7 +447,6 @@ export function Jigsaw() {
           ? "You finished the picture! Wonderful work!"
           : "A piece found its place!",
       );
-      playSound(hasWon ? "win" : "correct", state?.options.isSoundEnabled);
     }
   }
   async function placeSelectedPiece() {
@@ -455,6 +470,10 @@ export function Jigsaw() {
     );
     const previous = piecesRef.current;
     publishPieces(next);
+    playSound(
+      next.every((item) => item.isPlaced) ? "win" : "correct",
+      state?.options.isSoundEnabled,
+    );
     const result = await send({
       kind: "activity-answer",
       gameId: "jigsaw",
@@ -473,7 +492,6 @@ export function Jigsaw() {
         ? "You finished the picture! Wonderful work!"
         : "A piece found its place!",
     );
-    playSound(hasWon ? "win" : "correct", state?.options.isSoundEnabled);
   }
   return (
     <GameScene className="jigsaw-scene">

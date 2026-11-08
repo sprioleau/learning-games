@@ -47,9 +47,14 @@ describe("Word Builder", () => {
       await page.keyboard.press("Backspace");
       const words = ["fox", "crab", "fish", "frog", "boat"];
       for (let index = 0; index < words.length; index++) {
-        for (const letter of words[index])
-          await page.getByRole("button", { name: `Add ${letter}` }).click();
-        await page.getByRole("button", { name: "Check my word" }).click();
+        if (index === 0) {
+          await page.keyboard.type(words[index]);
+          await page.keyboard.press("Enter");
+        } else {
+          for (const letter of words[index])
+            await page.getByRole("button", { name: `Add ${letter}` }).click();
+          await page.getByRole("button", { name: "Check my word" }).click();
+        }
         if (index === 0) {
           await page.getByText("WORD 2 OF 5").waitFor();
           await page.reload();

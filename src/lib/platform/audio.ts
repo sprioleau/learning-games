@@ -13,6 +13,7 @@ const soundNotes: Record<SoundCue, number[]> = {
 function createSoundBuffer(context: AudioContext, cue: SoundCue) {
   const notes = soundNotes[cue];
   const duration = (notes.length - 1) * 0.12 + 0.25;
+  const peak = 0.22;
   const buffer = context.createBuffer(
     1,
     Math.ceil(context.sampleRate * duration),
@@ -30,10 +31,10 @@ function createSoundBuffer(context: AudioContext, cue: SoundCue) {
       const elapsed = sample / context.sampleRate;
       const envelope =
         elapsed < 0.02
-          ? (0.12 * elapsed) / 0.02
+          ? (peak * elapsed) / 0.02
           : elapsed < 0.24
-            ? 0.12 *
-              Math.exp((Math.log(0.001 / 0.12) * (elapsed - 0.02)) / 0.22)
+            ? peak *
+              Math.exp((Math.log(0.001 / peak) * (elapsed - 0.02)) / 0.22)
             : (0.001 * (0.25 - elapsed)) / 0.01;
       samples[start + sample] +=
         Math.sin(2 * Math.PI * frequency * elapsed) * envelope;

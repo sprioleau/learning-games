@@ -46,6 +46,15 @@ export function NumberTrail() {
   }
   async function chooseNumber(number: number) {
     if (!question || !session || isBusy) return;
+    const isCorrect = number === question.answer;
+    playSound(
+      isCorrect
+        ? session.cursor + 1 === session.questions.length
+          ? "win"
+          : "correct"
+        : "incorrect",
+      isSoundEnabled,
+    );
     const result = await send({
       kind: "activity-answer",
       gameId: "number-trail",
@@ -55,13 +64,10 @@ export function NumberTrail() {
     });
     if (!result) return;
     if (result.outcome === "incorrect") {
-      playSound("incorrect", isSoundEnabled);
       setMessage("Not quite. Count the steps and try again!");
     } else if (result.outcome === "won") {
-      playSound("win", isSoundEnabled);
       setMessage("You finished the number trail!");
     } else if (result.outcome === "correct") {
-      playSound("correct", isSoundEnabled);
       setMessage(`Yes! You landed on ${number}. Here’s the next trail!`);
     }
   }

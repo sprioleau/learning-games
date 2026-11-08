@@ -30,6 +30,7 @@ function WordRound({ session }: { session: ActivitySession }) {
   const [letters] = useState(() => createLetters(puzzle.word));
   const [selected, setSelected] = useState<number[]>([]);
   const answerArea = useRef<HTMLDivElement>(null);
+  const checkButton = useRef<HTMLButtonElement>(null);
   const drag = useRef<{
     id: number;
     x: number;
@@ -66,7 +67,17 @@ function WordRound({ session }: { session: ActivitySession }) {
             /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName)))
       )
         return;
-      if (event.key === "Backspace" || event.key === "Delete") {
+      if (
+        event.key === "Enter" &&
+        !event.repeat &&
+        !event.isComposing &&
+        selected.length === puzzle.word.length &&
+        !(target instanceof HTMLElement && target.closest('[role="dialog"]'))
+      ) {
+        event.preventDefault();
+        prepareGameAudio();
+        checkButton.current?.click();
+      } else if (event.key === "Backspace" || event.key === "Delete") {
         event.preventDefault();
         setSelected((current) => current.slice(0, -1));
       } else if (/^[a-z]$/i.test(event.key)) {
@@ -83,7 +94,7 @@ function WordRound({ session }: { session: ActivitySession }) {
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [isBusy, letters, puzzle.word.length]);
+  }, [isBusy, letters, puzzle.word.length, selected.length]);
   function beginDrag(event: PointerEvent<HTMLButtonElement>, id: number) {
     if (event.button !== 0) return;
     drag.current = { id, x: event.clientX, y: event.clientY, hasMoved: false };
@@ -134,6 +145,15 @@ function WordRound({ session }: { session: ActivitySession }) {
     const guess = selected
       .map((id) => letters.find((letter) => letter.id === id)?.value)
       .join("");
+    const isCorrect = guess === puzzle.word;
+    playSound(
+      isCorrect
+        ? session.cursor + 1 === session.questions.length
+          ? "win"
+          : "correct"
+        : "incorrect",
+      state?.options.isSoundEnabled,
+    );
     const result = await send({
       kind: "activity-answer",
       gameId: "word-builder",
@@ -144,13 +164,8 @@ function WordRound({ session }: { session: ActivitySession }) {
     if (!result) return;
     if (result.outcome === "incorrect") {
       setMessage("Try again! Tap a letter in your word to remove it.");
-      playSound("incorrect", state?.options.isSoundEnabled);
     } else if (result.outcome === "correct" || result.outcome === "won") {
       stopSpeaking();
-      playSound(
-        result.outcome === "won" ? "win" : "correct",
-        state?.options.isSoundEnabled,
-      );
     }
   }
   return (
@@ -249,6 +264,7 @@ function WordRound({ session }: { session: ActivitySession }) {
         {message}
       </p>
       <Button
+        ref={checkButton}
         className="play-button coral-button"
         disabled={selected.length !== puzzle.word.length || isBusy}
         onClick={checkWord}

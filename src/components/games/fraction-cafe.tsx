@@ -13,6 +13,7 @@ import { Celebration } from "./celebration";
 import {
   getCafeFood,
   getFractionName,
+  isCafeOrderComplete,
   type CafeOrder,
 } from "@/lib/games/fraction-cafe";
 import "./fraction-cafe.css";
@@ -52,6 +53,15 @@ export function FractionCafe() {
   }
   async function serveOrder() {
     if (!session || !order || isBusy) return;
+    const isCorrect = isCafeOrderComplete(order, selected);
+    playSound(
+      isCorrect
+        ? session.cursor + 1 === session.questions.length
+          ? "win"
+          : "correct"
+        : "incorrect",
+      state?.options.isSoundEnabled,
+    );
     const result = await send({
       kind: "activity-answer",
       gameId: "fraction-cafe",
@@ -61,15 +71,10 @@ export function FractionCafe() {
     });
     if (!result) return;
     if (result.outcome === "incorrect") {
-      playSound("incorrect", state?.options.isSoundEnabled);
       setMessage(
         `Try again! ${label} means ${order.numerator} of ${order.denominator} equal pieces.`,
       );
     } else if (result.outcome === "correct" || result.outcome === "won") {
-      playSound(
-        result.outcome === "won" ? "win" : "correct",
-        state?.options.isSoundEnabled,
-      );
       setSelected([]);
       setMessage("Yum! A new order is ready.");
     } else {
