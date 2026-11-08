@@ -87,17 +87,50 @@ describe("Jungle Jigsaw", () => {
       await context.close();
     }
   }, 60000);
-  it("offers a paged tray for a 56-piece puzzle", async () => {
+  it("shows all 56 pieces without paging", async () => {
     const page = await browser.newPage({ reducedMotion: "reduce" });
     try {
       await page.goto(`${baseURL}/play/jigsaw`);
       await page.getByRole("button", { name: "56 pieces" }).click();
+      await page.evaluate(() => {
+        Math.random = () => 0.9;
+      });
       await page.getByRole("button", { name: "Open puzzle box" }).click();
-      await page.getByRole("button", { name: "More pieces" }).click();
-      expect(await page.getByText("2 / 3", { exact: true }).isVisible()).toBe(
-        true,
+      await page.getByText("0 / 56 pieces").waitFor();
+      expect(
+        await page.getByRole("button", { name: "More pieces" }).count(),
+      ).toBe(0);
+      const canvas = page.getByRole("img", {
+        name: "Jungle puzzle board and scattered pieces",
+      });
+      const bounds = (await canvas.boundingBox())!;
+      const size = puzzleSizes[3];
+      const piece = createPuzzlePieces(size, () => 0.9)[0];
+      const target = getPieceTarget(piece, size);
+      const halfWidth = puzzleBoard.size / size.columns / 2;
+      const halfHeight = puzzleBoard.size / size.rows / 2;
+      function px(x: number) {
+        return bounds.x + (x * bounds.width) / puzzleCanvas.width;
+      }
+      function py(y: number) {
+        return bounds.y + (y * bounds.height) / puzzleCanvas.height;
+      }
+      await page.mouse.move(px(piece.x + halfWidth), py(piece.y + halfHeight));
+      await page.mouse.down();
+      await page.mouse.move(
+        px(target.x + halfWidth),
+        py(target.y + halfHeight),
+        { steps: 8 },
       );
-      expect(await page.getByText("0 / 56 pieces").isVisible()).toBe(true);
+      await page.mouse.up();
+      await page.getByText("1 / 56 pieces").waitFor();
+      await page.getByRole("button", { name: "Keyboard controls" }).click();
+      expect(
+        await page
+          .getByLabel("Piece", { exact: true })
+          .locator("option")
+          .count(),
+      ).toBe(56);
     } finally {
       await page.close();
     }

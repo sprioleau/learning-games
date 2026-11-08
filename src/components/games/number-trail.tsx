@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Play, RotateCcw } from "lucide-react";
 import { GameScene, SceneHeader } from "@/components/scene/game-scene";
 import { Mascot } from "@/components/hub/mascot";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Celebration } from "@/components/games/celebration";
 import { useGamePlatform } from "@/components/games/game-provider";
 import { playSound, prepareGameAudio } from "@/lib/platform/audio";
+import { artwork } from "@/lib/games/artwork";
 import { getWorld } from "@/lib/games/worlds";
 import type { TrailOperation, TrailQuestion } from "@/lib/games/number-trail";
 import "./number-trail.css";
@@ -17,6 +19,10 @@ export function NumberTrail() {
   const [operation, setOperation] = useState<TrailOperation>("addition");
   const [isChoosing, setIsChoosing] = useState(false);
   const [message, setMessage] = useState("Choose where the trail ends!");
+  const [preview, setPreview] = useState<{
+    number: number;
+    revision: number;
+  } | null>(null);
   const session = state?.activitySessions.find(
     (item) => item.gameId === "number-trail",
   );
@@ -29,6 +35,19 @@ export function NumberTrail() {
     session?.worldId ?? state?.session?.worldId ?? "jungle",
   );
   const isSoundEnabled = state?.options.isSoundEnabled ?? true;
+  const previewNumber =
+    preview && preview.revision === session?.revision ? preview.number : null;
+  const hops =
+    question && previewNumber !== null
+      ? Array.from(
+          { length: Math.abs(previewNumber - question.start) },
+          (_, index) => {
+            const direction = previewNumber > question.start ? 1 : -1;
+            const from = question.start + direction * index;
+            return { from, to: from + direction };
+          },
+        )
+      : [];
 
   async function startGame(mode: TrailOperation = operation) {
     if (!state) return;
@@ -184,6 +203,22 @@ export function NumberTrail() {
               role="group"
               aria-label="Choose the answer on the number line"
             >
+              {hops.length > 0 && (
+                <svg
+                  className="number-trail-hops"
+                  viewBox="0 0 1100 100"
+                  preserveAspectRatio="none"
+                  aria-hidden="true"
+                >
+                  {hops.map((hop, index) => (
+                    <path
+                      key={`${hop.from}-${hop.to}`}
+                      d={`M ${hop.from * 100 + 50} 94 Q ${(hop.from + hop.to) * 50 + 50} 4 ${hop.to * 100 + 50} 94`}
+                      style={{ animationDelay: `${index * 70}ms` }}
+                    />
+                  ))}
+                </svg>
+              )}
               {Array.from({ length: 11 }, (_, number) => (
                 <button
                   key={number}
@@ -191,12 +226,25 @@ export function NumberTrail() {
                   className={`number-trail-number ${number === question.start ? "number-trail-start" : ""}`}
                   aria-label={`Choose ${number}${number === question.start ? ", starting number" : ""}`}
                   disabled={isBusy}
+                  onPointerEnter={() =>
+                    setPreview({ number, revision: session.revision })
+                  }
+                  onPointerLeave={() => setPreview(null)}
+                  onFocus={() =>
+                    setPreview({ number, revision: session.revision })
+                  }
+                  onBlur={() => setPreview(null)}
                   onClick={() => chooseNumber(number)}
                 >
                   {number === question.start && (
-                    <span className="number-trail-marker" aria-hidden="true">
-                      ★
-                    </span>
+                    <Image
+                      className="number-trail-marker"
+                      src={artwork.rewardStar}
+                      alt=""
+                      aria-hidden="true"
+                      width={64}
+                      height={64}
+                    />
                   )}
                   {number}
                 </button>

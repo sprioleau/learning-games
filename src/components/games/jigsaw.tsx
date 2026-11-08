@@ -17,7 +17,6 @@ import {
   createPuzzlePieces,
   getPieceEdges,
   getPieceTarget,
-  getPuzzlePageCapacity,
   isNearPieceTarget,
   puzzleBoard,
   puzzleCanvas,
@@ -73,7 +72,7 @@ type Drag = {
   dy: number;
   startX: number;
   startY: number;
-  startPage: number;
+  startRotation: number;
 };
 export function Jigsaw() {
   const { state, send, isBusy, error, reload } = useGamePlatform();
@@ -86,7 +85,6 @@ export function Jigsaw() {
   const size = puzzleSizes.find((item) => item.id === sizeId) ?? puzzleSizes[0];
   const [pieces, setPieces] = useState<PuzzlePiece[]>([]);
   const piecesRef = useRef<PuzzlePiece[]>([]);
-  const [page, setPage] = useState(0);
   const [isStarted, setIsStarted] = useState(false);
   const [isOpening, setIsOpening] = useState(false);
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false);
@@ -112,7 +110,7 @@ export function Jigsaw() {
           column,
           x: 0,
           y: 0,
-          page: 0,
+          rotation: 0,
           isPlaced: false,
         };
         result.set(piece.id, makePath(piece, size));
@@ -121,9 +119,6 @@ export function Jigsaw() {
   }, [size]);
   const placedCount = pieces.filter((piece) => piece.isPlaced).length;
   const isWon = isStarted && savedSession?.phase === "won";
-  const pages = Math.ceil(
-    (size.rows * size.columns) / getPuzzlePageCapacity(size),
-  );
   function publishPieces(next: PuzzlePiece[]) {
     piecesRef.current = next;
     setPieces(next);
@@ -141,13 +136,17 @@ export function Jigsaw() {
       restoredId.current = savedSession.id;
       const restored = createPuzzlePieces(savedSize).map((piece) =>
         savedSession.answers.includes(piece.id)
-          ? { ...piece, ...getPieceTarget(piece, savedSize), isPlaced: true }
+          ? {
+              ...piece,
+              ...getPieceTarget(piece, savedSize),
+              isPlaced: true,
+              rotation: 0,
+            }
           : piece,
       );
       piecesRef.current = restored;
       setPieces(restored);
       setSizeId(savedSize.id);
-      setPage(0);
       setIsStarted(true);
       setMessage(
         savedSession.phase === "won"
@@ -227,21 +226,15 @@ export function Jigsaw() {
     );
     context.fill();
     context.stroke();
-    context.fillStyle = "#f9e2b5";
-    context.font = "bold 21px sans-serif";
-    context.fillText(
-      `PIECES · ${page + 1} / ${pages}`,
-      puzzleTray.x + 12,
-      puzzleTray.y + 22,
-    );
-    const visible = pieces.filter(
-      (piece) => piece.isPlaced || piece.page === page || piece.page === -1,
-    );
-    for (const piece of visible) {
+    for (const piece of pieces) {
       const path = paths.get(piece.id);
       if (!path) continue;
       context.save();
-      context.translate(piece.x, piece.y);
+      const width = puzzleBoard.size / size.columns;
+      const height = puzzleBoard.size / size.rows;
+      context.translate(piece.x + width / 2, piece.y + height / 2);
+      context.rotate((piece.rotation * Math.PI) / 180);
+      context.translate(-width / 2, -height / 2);
       context.shadowColor = "#56331d88";
       context.shadowBlur = 7;
       context.shadowOffsetY = 4;
@@ -275,7 +268,7 @@ export function Jigsaw() {
       }
       context.restore();
     }
-  }, [pieces, page, pages, size, paths, isKeyboardOpen, isImageReady]);
+  }, [pieces, size, paths, isKeyboardOpen, isImageReady]);
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -308,7 +301,6 @@ export function Jigsaw() {
       : 550;
     openingTimer.current = window.setTimeout(() => {
       publishPieces(createPuzzlePieces(size));
-      setPage(0);
       setIsStarted(true);
       isStarting.current = false;
       setIsOpening(false);
@@ -333,14 +325,22 @@ export function Jigsaw() {
     const point = getPoint(event);
     context.save();
     context.setTransform(1, 0, 0, 1, 0, 0);
+    const width = puzzleBoard.size / size.columns;
+    const height = puzzleBoard.size / size.rows;
+    let localX = 0;
+    let localY = 0;
     const piece = [...piecesRef.current].reverse().find((item) => {
       const path = paths.get(item.id);
-      return (
-        !item.isPlaced &&
-        (item.page === page || item.page === -1) &&
-        path &&
-        context.isPointInPath(path, point.x - item.x, point.y - item.y)
-      );
+      if (item.isPlaced || !path) return false;
+      const dx = point.x - item.x - width / 2;
+      const dy = point.y - item.y - height / 2;
+      const angle = (-item.rotation * Math.PI) / 180;
+      const x = dx * Math.cos(angle) - dy * Math.sin(angle) + width / 2;
+      const y = dx * Math.sin(angle) + dy * Math.cos(angle) + height / 2;
+      if (!context.isPointInPath(path, x, y)) return false;
+      localX = x;
+      localY = y;
+      return true;
     });
     context.restore();
     if (!piece) return;
@@ -348,15 +348,15 @@ export function Jigsaw() {
     drag.current = {
       pointerId: event.pointerId,
       pieceId: piece.id,
-      dx: point.x - piece.x,
-      dy: point.y - piece.y,
+      dx: localX,
+      dy: localY,
       startX: piece.x,
       startY: piece.y,
-      startPage: piece.page,
+      startRotation: piece.rotation,
     };
     publishPieces([
       ...piecesRef.current.filter((item) => item.id !== piece.id),
-      piece,
+      { ...piece, x: point.x - localX, y: point.y - localY, rotation: 0 },
     ]);
     event.preventDefault();
   }
@@ -400,13 +400,18 @@ export function Jigsaw() {
           ...piece,
           x: active.startX,
           y: active.startY,
-          page: active.startPage,
+          rotation: active.startRotation,
         };
       if (isNearPieceTarget(piece, size)) {
         didPlace = true;
-        return { ...piece, ...getPieceTarget(piece, size), isPlaced: true };
+        return {
+          ...piece,
+          ...getPieceTarget(piece, size),
+          isPlaced: true,
+          rotation: 0,
+        };
       }
-      return { ...piece, page: piece.x < puzzleTray.x ? -1 : page };
+      return piece;
     });
     const previous = piecesRef.current;
     publishPieces(next);
@@ -465,7 +470,12 @@ export function Jigsaw() {
     }
     const next = piecesRef.current.map((item) =>
       item.id === id
-        ? { ...item, ...getPieceTarget(item, size), isPlaced: true }
+        ? {
+            ...item,
+            ...getPieceTarget(item, size),
+            isPlaced: true,
+            rotation: 0,
+          }
         : item,
     );
     const previous = piecesRef.current;
@@ -564,23 +574,6 @@ export function Jigsaw() {
             <strong>
               {placedCount} / {pieces.length} pieces
             </strong>
-            <Button
-              variant="outline"
-              disabled={page === 0}
-              onClick={() => setPage((value) => value - 1)}
-            >
-              Previous pieces
-            </Button>
-            <span>
-              {page + 1} / {pages}
-            </span>
-            <Button
-              variant="outline"
-              disabled={page === pages - 1}
-              onClick={() => setPage((value) => value + 1)}
-            >
-              More pieces
-            </Button>
             <Button
               variant="outline"
               aria-expanded={isKeyboardOpen}

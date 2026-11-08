@@ -76,9 +76,10 @@
   background: #ffdd83;
 }
 .number-trail-numberLine {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(11, minmax(0, 1fr));
   align-items: center;
-  gap: 0.45cqw;
+  gap: 0;
   position: relative;
 }
 .number-trail-numberLine::before {
@@ -92,7 +93,8 @@
 }
 .number-trail-number {
   position: relative;
-  flex: 1;
+  width: calc(100% - 0.45cqw);
+  margin: 0 0.225cqw;
   min-width: 0;
   aspect-ratio: 1;
   border: 0.18cqw solid #bd8e49;
@@ -120,10 +122,46 @@
 .number-trail-marker {
   position: absolute;
   left: 50%;
-  top: -1.55cqw;
+  top: -2.6cqw;
   transform: translateX(-50%);
-  font-size: 1.4cqw;
-  color: #c27418;
+  width: 3.4cqw;
+  height: 3.4cqw;
+  object-fit: contain;
+  z-index: 3;
+  filter: drop-shadow(0 0.18cqw 0.15cqw #8d572c66);
+  pointer-events: none;
+}
+.number-trail-hops {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% - 0.4cqw);
+  width: 100%;
+  height: 3.2cqw;
+  overflow: visible;
+  pointer-events: none;
+}
+.number-trail-hops path {
+  fill: none;
+  stroke: #b66c28;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 1 12;
+  opacity: 1;
+  animation: number-trail-hop 0.2s ease-out backwards;
+}
+@keyframes number-trail-hop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .number-trail-hops path {
+    animation-duration: 0.01ms;
+    animation-delay: 0ms !important;
+  }
 }
 .number-trail-status {
   text-align: center;

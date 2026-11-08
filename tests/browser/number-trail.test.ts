@@ -31,6 +31,29 @@ describe("Number Trail", () => {
           name: "Choose the answer on the number line",
         });
         if (index === 0) {
+          const answerButton = numbers.getByRole("button", {
+            name: new RegExp(`^Choose ${answer}(?:,|$)`),
+          });
+          await answerButton.hover();
+          expect(await numbers.locator("svg path").count()).toBe(
+            Number(match![2]),
+          );
+          expect(
+            await numbers
+              .locator("svg path")
+              .first()
+              .evaluate((path) => getComputedStyle(path).opacity),
+          ).toBe("1");
+          await numbers
+            .getByRole("button", {
+              name: new RegExp(`^Choose ${match![1]}, starting number$`),
+            })
+            .focus();
+          expect(await numbers.locator("svg path").count()).toBe(0);
+          await answerButton.focus();
+          expect(await numbers.locator("svg path").count()).toBe(
+            Number(match![2]),
+          );
           await numbers
             .getByRole("button", {
               name: new RegExp(`^Choose ${(answer + 1) % 11}(?:,|$)`),

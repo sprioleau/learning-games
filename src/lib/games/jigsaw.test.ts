@@ -3,24 +3,18 @@ import {
   createPuzzlePieces,
   getPieceEdges,
   getPieceTarget,
-  getPuzzlePageCapacity,
   isNearPieceTarget,
   puzzleBoard,
   puzzleSizes,
 } from "./jigsaw";
 
 describe("jigsaw pieces", () => {
-  it.each(puzzleSizes)(
-    "creates all pieces for $label and spreads them across trays",
-    (size) => {
-      const pieces = createPuzzlePieces(size, () => 0.5);
-      expect(pieces).toHaveLength(size.rows * size.columns);
-      expect(new Set(pieces.map((piece) => piece.id)).size).toBe(pieces.length);
-      expect(Math.max(...pieces.map((piece) => piece.page)) + 1).toBe(
-        Math.ceil(pieces.length / getPuzzlePageCapacity(size)),
-      );
-    },
-  );
+  it.each(puzzleSizes)("creates all pieces for $label in one tray", (size) => {
+    const pieces = createPuzzlePieces(size, () => 0.5);
+    expect(pieces).toHaveLength(size.rows * size.columns);
+    expect(new Set(pieces.map((piece) => piece.id)).size).toBe(pieces.length);
+    expect(pieces.every((piece) => Math.abs(piece.rotation) <= 8)).toBe(true);
+  });
   it.each(puzzleSizes)(
     "makes every neighboring edge complementary for $label",
     (size) => {
