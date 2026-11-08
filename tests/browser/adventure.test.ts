@@ -20,6 +20,11 @@ describe("a complete learning adventure", () => {
     page.on("pageerror", (error) => errors.push(error.message));
     await page.addInitScript(() => {
       const spoken: string[] = [];
+      HTMLMediaElement.prototype.play = function () {
+        const match = this.currentSrc.match(/\/bingo\/([a-z]+)\.mp3/);
+        if (match) spoken.push(match[1]);
+        return Promise.resolve();
+      };
       Object.defineProperty(window, "speechSynthesis", {
         value: {
           getVoices() {

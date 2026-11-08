@@ -95,9 +95,25 @@ export function playSound(cue: SoundCue, isEnabled = true) {
     */
   }
 }
-export type SpeechOptions = { repeatCount?: 1 | 2 };
+export type SpeechOptions = {
+  repeatCount?: 1 | 2;
+  shouldUseRecording?: boolean;
+  recordingPath?: string;
+};
 let playbackGeneration = 0;
 let cancelPendingSpeech: (() => void) | null = null;
+const recordedWords = new Map<string, HTMLAudioElement>();
+
+export function warmBingoVoice(words: string[]) {
+  if (typeof window === "undefined") return;
+  for (const word of words) {
+    if (!/^[a-z]+$/.test(word) || recordedWords.has(word)) continue;
+    const audio = new Audio(`/assets/audio/bingo/${word}.mp3`);
+    audio.preload = "auto";
+    audio.load();
+    recordedWords.set(word, audio);
+  }
+}
 
 function getVoiceScore(voice: SpeechSynthesisVoice) {
   const name = `${voice.name} ${voice.voiceURI}`;
@@ -138,6 +154,48 @@ export function speakWord(
   options: SpeechOptions = {},
 ) {
   stopSpeaking();
+  if (
+    (options.shouldUseRecording || options.recordingPath) &&
+    typeof window !== "undefined"
+  ) {
+    if (options.shouldUseRecording) warmBingoVoice([word]);
+    const key = options.recordingPath ?? word;
+    if (options.recordingPath && !recordedWords.has(key)) {
+      const recording = new Audio(options.recordingPath);
+      recording.preload = "auto";
+      recordedWords.set(key, recording);
+    }
+    const audio = recordedWords.get(key);
+    if (audio) {
+      const generation = playbackGeneration;
+      let remaining = options.repeatCount === 2 ? 2 : 1;
+      setBackgroundMusicDucked(true);
+      function cleanupRecording() {
+        audio!.pause();
+        audio!.onended = null;
+        audio!.onerror = null;
+        setBackgroundMusicDucked(false);
+      }
+      function fallback() {
+        if (generation !== playbackGeneration) return;
+        cleanupRecording();
+        speakWord(word, rate, onUnavailable, {
+          repeatCount: options.repeatCount,
+        });
+      }
+      cancelPendingSpeech = cleanupRecording;
+      audio.currentTime = 0;
+      audio.onended = () => {
+        if (--remaining > 0 && generation === playbackGeneration) {
+          audio.currentTime = 0;
+          void audio.play().catch(fallback);
+        } else cleanupRecording();
+      };
+      audio.onerror = fallback;
+      void audio.play().catch(fallback);
+      return;
+    }
+  }
   if (
     typeof window === "undefined" ||
     !window.speechSynthesis ||

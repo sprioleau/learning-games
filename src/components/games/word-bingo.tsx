@@ -25,6 +25,7 @@ import {
   playSound,
   speakWord,
   stopSpeaking,
+  warmBingoVoice,
 } from "@/lib/platform/audio";
 import { Mascot } from "@/components/hub/mascot";
 
@@ -58,9 +59,15 @@ export function WordBingo() {
   const options = state?.options;
   const speechRate = options?.speechRate;
   useEffect(() => {
+    if (session?.board) warmBingoVoice(session.board);
+  }, [session?.board]);
+  useEffect(() => {
     if (!target || !isPlaying || !speechRate) return;
     const timeout = window.setTimeout(
-      () => speakWord(target, speechRate, () => setIsSpeechUnavailable(true)),
+      () =>
+        speakWord(target, speechRate, () => setIsSpeechUnavailable(true), {
+          shouldUseRecording: true,
+        }),
       450,
     );
     return () => {
@@ -115,7 +122,7 @@ export function WordBingo() {
         target,
         options.speechRate,
         () => setIsSpeechUnavailable(true),
-        { repeatCount: 2 },
+        { repeatCount: 2, shouldUseRecording: true },
       );
   }
   return (

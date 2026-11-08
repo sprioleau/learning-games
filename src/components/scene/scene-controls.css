@@ -1,0 +1,14 @@
+.game-scene .read-instructions-button {
+  height: auto !important;
+  padding: 0.7cqw 1cqw !important;
+  border-radius: 2cqw !important;
+  background: #fff5dc !important;
+  color: #4e3a28 !important;
+  font-size: 1cqw !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0.25cqw 0.1cqw #8e683d80;
+}
+.game-scene .read-instructions-button svg {
+  width: 1.5cqw !important;
+  height: 1.5cqw !important;
+}

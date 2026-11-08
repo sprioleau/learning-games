@@ -1,0 +1,30 @@
+{
+  "Word Bingo": {
+    "id": "word-bingo",
+    "text": "Listen to the word, find it on the board, and tap it. Find five in a row to win. Tap the speaker to hear the word again."
+  },
+  "Picture Pairs": {
+    "id": "picture-pairs",
+    "text": "Turn over two cards. Remember the pictures and find all the matching pairs."
+  },
+  "Math Drops": {
+    "id": "math-drops",
+    "text": "Solve the math problem before the raindrop reaches the water. Type your answer and press enter, or use the number buttons and tap Go."
+  },
+  "Word Builder": {
+    "id": "word-builder",
+    "text": "Listen to the word and put the letters in order. Tap or drag the letters, or type them. Press enter to check your word."
+  },
+  "Fraction Café": {
+    "id": "fraction-cafe",
+    "text": "Choose the equal pieces needed to make the fraction in the order, then serve your customer."
+  },
+  "Number Trail": {
+    "id": "number-trail",
+    "text": "Start on the marked number. Count the hops forward or backward, then choose where you land."
+  },
+  "Jungle Jigsaw": {
+    "id": "jigsaw",
+    "text": "Choose a world, picture, and puzzle size. Drag the pieces into place to complete the picture."
+  }
+}

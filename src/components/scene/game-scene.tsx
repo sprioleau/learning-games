@@ -8,8 +8,17 @@ import {
 } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Maximize, Minimize, Music2, VolumeX } from "lucide-react";
-import { prepareGameAudio } from "@/lib/platform/audio";
+import {
+  ArrowLeft,
+  Maximize,
+  Minimize,
+  Music2,
+  VolumeX,
+  Volume2,
+} from "lucide-react";
+import { prepareGameAudio, speakWord } from "@/lib/platform/audio";
+import spokenInstructions from "@/lib/games/spoken-instructions.json";
+import "./scene-controls.css";
 import {
   pauseBackgroundMusic,
   startBackgroundMusic,
@@ -143,6 +152,14 @@ export function SceneHeader({
     });
     if (!result && !isMusicEnabled) startBackgroundMusic();
   }
+  function readInstructions() {
+    const entry =
+      title && spokenInstructions[title as keyof typeof spokenInstructions];
+    if (!entry) return;
+    speakWord(entry.text, state?.options.speechRate ?? "gentle", undefined, {
+      recordingPath: `/assets/audio/instructions/${entry.id}.mp3`,
+    });
+  }
   return (
     <header className="scene-header">
       {title ? (
@@ -155,6 +172,14 @@ export function SceneHeader({
             <ArrowLeft />
           </Link>
           <h1 className="wooden-title">{title}</h1>
+          <Button
+            variant="ghost"
+            className="read-instructions-button"
+            onClick={readInstructions}
+            aria-label="Hear instructions"
+          >
+            <Volume2 aria-hidden="true" /> <span>Hear instructions</span>
+          </Button>
         </div>
       ) : (
         <Brand variant="stacked" />
@@ -185,7 +210,9 @@ export function SceneHeader({
           onClick={toggleMusic}
         >
           {state?.options.isMusicEnabled ? <Music2 /> : <VolumeX />}
-          <span>{state?.options.isMusicEnabled ? "Mute music" : "Music off"}</span>
+          <span>
+            {state?.options.isMusicEnabled ? "Mute music" : "Music off"}
+          </span>
         </Button>
         <GameOptionsPanel />
         <Button

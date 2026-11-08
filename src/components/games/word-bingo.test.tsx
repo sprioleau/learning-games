@@ -23,6 +23,7 @@ vi.mock("@/lib/platform/audio", () => ({
   prepareGameAudio: vi.fn(),
   playSound: vi.fn(),
   speakWord: vi.fn(),
+  warmBingoVoice: vi.fn(),
   stopSpeaking: vi.fn(),
 }));
 vi.mock("./celebration", () => ({
@@ -87,7 +88,7 @@ describe("the playable bingo experience", () => {
       session.order[0],
       "gentle",
       expect.any(Function),
-      { repeatCount: 2 },
+      { repeatCount: 2, shouldUseRecording: true },
     );
     await user.click(
       screen.getByRole("button", { name: "Listen to the word" }),
@@ -96,7 +97,7 @@ describe("the playable bingo experience", () => {
       session.order[0],
       "gentle",
       expect.any(Function),
-      { repeatCount: 2 },
+      { repeatCount: 2, shouldUseRecording: true },
     );
   });
 
