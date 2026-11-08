@@ -55,6 +55,16 @@ describe("a complete learning adventure", () => {
       () => (window as unknown as { spokenWords: string[] }).spokenWords,
     );
     expect(spoken.at(-1)).toBe(firstWord);
+    await page.getByRole("button", { name: "Full screen" }).click();
+    await page.getByRole("button", { name: "Exit full screen" }).waitFor();
+    const speechCount = spoken.length;
+    await page.getByRole("button", { name: "Hear the word again" }).click();
+    const fullscreenSpoken = await page.evaluate(
+      () => (window as unknown as { spokenWords: string[] }).spokenWords,
+    );
+    expect(fullscreenSpoken.length).toBeGreaterThan(speechCount);
+    expect(fullscreenSpoken.at(-1)).toBe(firstWord);
+    await page.getByRole("button", { name: "Exit full screen" }).click();
     const board = page.getByLabel("Word board, five rows and five columns");
     const words = await board.getByRole("button").allTextContents();
     const wrongWord = words.find((word) => word !== firstWord)!;

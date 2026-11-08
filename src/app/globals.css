@@ -137,6 +137,15 @@ svg {
   align-items: center;
   gap: 1cqw;
 }
+.scene-header .music-toggle {
+  display: flex !important;
+  width: auto !important;
+  padding: 0 1cqw !important;
+  border-radius: 3cqw !important;
+  gap: 0.35cqw;
+  font-size: 1cqw;
+  font-weight: 800;
+}
 .brand {
   display: flex;
   align-items: center;

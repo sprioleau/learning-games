@@ -60,15 +60,25 @@
 .number-trail-heading {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 2cqw;
 }
+.number-trail-prompt {
+  display: flex;
+  align-items: center;
+  gap: 1.2cqw;
+}
 .number-trail-heading h2 {
-  font-size: 2.7cqw;
+  font-size: 2.25cqw;
+}
+.number-trail-heading p {
+  margin-top: 0.5cqw;
+  font-size: 1.15cqw;
+  color: #775d49;
 }
 .number-trail-equation {
   font-family: var(--font-heading);
-  font-size: 3.2cqw;
+  font-weight: 800;
+  font-size: 3.5cqw;
   white-space: nowrap;
   padding: 0.8cqw 1.5cqw;
   border: 0.2cqw solid #eabf71;

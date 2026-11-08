@@ -7,36 +7,42 @@ let buffer: AudioBuffer | null = null;
 let isDucked = false;
 
 /*
-  A small original music-box melody, rendered once into a seamless loop so
-  playback never needs network requests or work on the interaction path.
+  A mellow original electric-piano loop, rendered once so playback never needs
+  network requests or synthesis on the interaction path.
 */
 function createMusicBuffer(audio: AudioContext) {
-  const beatLength = 0.5;
-  const melody = [
-    523.25, 659.25, 783.99, 659.25, 587.33, 698.46, 880, 698.46, 659.25, 783.99,
-    1046.5, 783.99, 698.46, 659.25, 587.33, 0, 523.25, 659.25, 783.99, 659.25,
-    587.33, 698.46, 880, 698.46, 659.25, 587.33, 523.25, 587.33, 659.25, 587.33,
-    523.25, 0,
+  const beatLength = 0.75;
+  const chords = [
+    [130.81, 164.81, 196, 246.94],
+    [110, 130.81, 164.81, 196],
+    [87.31, 130.81, 164.81, 220],
+    [98, 123.47, 146.83, 196],
   ];
-  const result = audio.createBuffer(1, audio.sampleRate * 16, audio.sampleRate);
+  const result = audio.createBuffer(1, audio.sampleRate * 24, audio.sampleRate);
   const samples = result.getChannelData(0);
-  melody.forEach((frequency, index) => {
-    if (!frequency) return;
-    const start = Math.round(index * beatLength * audio.sampleRate);
+  function addNote(frequency: number, startTime: number, strength: number) {
+    const start = Math.round(startTime * audio.sampleRate);
     const length = Math.min(
-      Math.round(audio.sampleRate * 0.7),
+      Math.round(audio.sampleRate * 2.2),
       samples.length - start,
     );
     for (let sample = 0; sample < length; sample++) {
       const time = sample / audio.sampleRate;
-      const envelope = Math.min(time / 0.02, 1) * Math.exp(-time * 6);
+      const envelope = Math.min(time / 0.09, 1) * Math.exp(-time * 2.1);
+      const phase = 2 * Math.PI * frequency * time;
       samples[start + sample] +=
-        envelope *
-        (Math.sin(2 * Math.PI * frequency * time) +
-          0.2 * Math.sin(2 * Math.PI * frequency * 2 * time)) *
-        0.24;
+        strength * envelope * (Math.sin(phase) + 0.12 * Math.sin(phase * 2));
     }
-  });
+  }
+  for (let bar = 0; bar < 8; bar++) {
+    const chord = chords[bar % chords.length];
+    const start = bar * beatLength * 4;
+    chord.forEach((frequency, index) =>
+      addNote(frequency, start + index * 0.025, 0.035),
+    );
+    addNote(chord[2] * 2, start + beatLength * 1.5, 0.025);
+    addNote(chord[1] * 2, start + beatLength * 3, 0.02);
+  }
   return result;
 }
 
@@ -47,7 +53,7 @@ export function prepareBackgroundMusic() {
       context = new window.AudioContext();
       buffer = createMusicBuffer(context);
       volume = context.createGain();
-      volume.gain.value = isDucked ? 0.025 : 0.16;
+      volume.gain.value = isDucked ? 0.015 : 0.12;
       volume.connect(context.destination);
     }
     if (!source && context.state !== "running")
@@ -86,7 +92,7 @@ export function setBackgroundMusicDucked(shouldDuck: boolean) {
   isDucked = shouldDuck;
   if (volume && context) {
     volume.gain.setTargetAtTime(
-      shouldDuck ? 0.025 : 0.16,
+      shouldDuck ? 0.015 : 0.12,
       context.currentTime,
       0.08,
     );

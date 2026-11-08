@@ -8,8 +8,12 @@ import {
 } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Maximize, Minimize } from "lucide-react";
+import { ArrowLeft, Maximize, Minimize, Music2, VolumeX } from "lucide-react";
 import { prepareGameAudio } from "@/lib/platform/audio";
+import {
+  pauseBackgroundMusic,
+  startBackgroundMusic,
+} from "@/lib/platform/music";
 import { GameAssetWarmup } from "./game-asset-warmup";
 import { useSceneWidth } from "./use-scene-width";
 import { Button } from "@/components/ui/button";
@@ -97,7 +101,7 @@ export function SceneHeader({
   title?: string;
   children?: ReactNode;
 }) {
-  const { state, isAdminMode } = useGamePlatform();
+  const { state, isAdminMode, isBusy, send } = useGamePlatform();
   const container = useSceneContainer();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const hasPendingFullscreen = useRef(false);
@@ -128,6 +132,16 @@ export function SceneHeader({
     } finally {
       hasPendingFullscreen.current = false;
     }
+  }
+  async function toggleMusic() {
+    if (!state || isBusy) return;
+    const isMusicEnabled = !state.options.isMusicEnabled;
+    if (!isMusicEnabled) pauseBackgroundMusic();
+    const result = await send({
+      kind: "options",
+      options: { ...state.options, isMusicEnabled },
+    });
+    if (!result && !isMusicEnabled) startBackgroundMusic();
   }
   return (
     <header className="scene-header">
@@ -160,6 +174,19 @@ export function SceneHeader({
           <Image src={artwork.rewardStar} width={64} height={64} alt="" />
           {state?.stars ?? 0}
         </span>
+        <Button
+          variant="ghost"
+          className="scene-icon-button music-toggle"
+          aria-label={
+            state?.options.isMusicEnabled ? "Mute music" : "Turn on music"
+          }
+          aria-pressed={state?.options.isMusicEnabled ?? false}
+          disabled={!state || isBusy}
+          onClick={toggleMusic}
+        >
+          {state?.options.isMusicEnabled ? <Music2 /> : <VolumeX />}
+          <span>{state?.options.isMusicEnabled ? "Mute music" : "Music off"}</span>
+        </Button>
         <GameOptionsPanel />
         <Button
           variant="ghost"

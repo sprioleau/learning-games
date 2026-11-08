@@ -183,19 +183,22 @@ export function NumberTrail() {
                 <span className="panel-eyebrow">
                   TRAIL {session.cursor + 1} OF {session.questions.length}
                 </span>
-                <h2>Where will you land?</h2>
+                <div className="number-trail-prompt">
+                  <h2>Where will you land?</h2>
+                  <div
+                    className="number-trail-equation"
+                    aria-label={`${question.start} ${question.operation === "addition" ? "plus" : "minus"} ${question.steps} equals what?`}
+                  >
+                    {question.start}{" "}
+                    {question.operation === "addition" ? "+" : "−"}{" "}
+                    {question.steps} = ?
+                  </div>
+                </div>
                 <p>
                   Start at <strong>{question.start}</strong>. Hop{" "}
                   {question.steps}{" "}
                   {question.operation === "addition" ? "forward" : "backward"}.
                 </p>
-              </div>
-              <div
-                className="number-trail-equation"
-                aria-label={`${question.start} ${question.operation === "addition" ? "plus" : "minus"} ${question.steps} equals what?`}
-              >
-                {question.start} {question.operation === "addition" ? "+" : "−"}{" "}
-                {question.steps} = ?
               </div>
             </div>
             <div
