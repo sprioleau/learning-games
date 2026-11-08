@@ -10,7 +10,11 @@ import { Button } from "@/components/ui/button";
 import { playSound, prepareGameAudio } from "@/lib/platform/audio";
 import { useGamePlatform } from "./game-provider";
 import { Celebration } from "./celebration";
-import { getFractionName, type CafeOrder } from "@/lib/games/fraction-cafe";
+import {
+  getCafeFood,
+  getFractionName,
+  type CafeOrder,
+} from "@/lib/games/fraction-cafe";
 import "./fraction-cafe.css";
 
 export function FractionCafe() {
@@ -24,6 +28,7 @@ export function FractionCafe() {
   const question = session?.questions[session.cursor];
   const order = question ? (JSON.parse(question.payload) as CafeOrder) : null;
   const label = order ? getFractionName(order) : "";
+  const food = order ? getCafeFood(order.food) : null;
 
   async function startGame() {
     prepareGameAudio();
@@ -137,7 +142,7 @@ export function FractionCafe() {
                 <h2>Can I have {label}?</h2>
                 <p>
                   Choose {order.numerator} of the {order.denominator} equal
-                  pieces of {order.food === "pizza" ? "pizza" : "cake"}.
+                  pieces of {food?.label}.
                 </p>
                 <strong className={"fraction-cafe-fraction"}>
                   {order.numerator}/{order.denominator}
@@ -146,15 +151,10 @@ export function FractionCafe() {
               <div
                 className={"fraction-cafe-plate"}
                 data-pieces={order.denominator}
-                data-shape={
-                  order.food === "pizza"
-                    ? "circle"
-                    : session.cursor === 1
-                      ? "square"
-                      : "rectangle"
-                }
+                data-shape={food?.shape}
+                data-food={order.food}
                 role="group"
-                aria-label={`${order.food === "pizza" ? "pizza" : "cake"} divided into ${order.denominator} equal pieces`}
+                aria-label={`${food?.label} divided into ${order.denominator} equal pieces`}
               >
                 {Array.from({ length: order.denominator }, (_, index) => {
                   const isSelected = selected.includes(index);

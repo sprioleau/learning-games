@@ -246,7 +246,29 @@ export function MathDrops() {
                 : "Solve it before the splash!"
               : "Ready to catch a drop?"}
           </span>
-          <div className="math-drops-water" aria-hidden="true" />
+          <div className="math-drops-water" aria-hidden="true">
+            <svg
+              className="math-drops-wave math-drops-wave-back"
+              viewBox="0 0 1200 80"
+              preserveAspectRatio="none"
+            >
+              <path d="M0 35 C75 8 150 62 300 35 C375 8 450 62 600 35 C675 8 750 62 900 35 C975 8 1050 62 1200 35 L1200 80 L0 80 Z" />
+            </svg>
+            <svg
+              className="math-drops-wave math-drops-wave-middle"
+              viewBox="0 0 1200 80"
+              preserveAspectRatio="none"
+            >
+              <path d="M0 36 C75 64 150 10 300 36 C375 64 450 10 600 36 C675 64 750 10 900 36 C975 64 1050 10 1200 36 L1200 80 L0 80 Z" />
+            </svg>
+            <svg
+              className="math-drops-wave math-drops-wave-front"
+              viewBox="0 0 1200 80"
+              preserveAspectRatio="none"
+            >
+              <path d="M0 38 C75 66 150 9 300 38 C375 66 450 9 600 38 C675 66 750 9 900 38 C975 66 1050 9 1200 38 L1200 80 L0 80 Z" />
+            </svg>
+          </div>
           <div className="math-drops-threshold" aria-hidden="true" />
           {question && isPlaying && !isSplashing && (
             <div
@@ -257,11 +279,19 @@ export function MathDrops() {
                 } as CSSProperties
               }
             >
-              <span className="math-drops-dropText">{question.prompt}</span>
+              <span
+                className={`math-drops-dropText ${/\d{2,}/.test(question.prompt) ? "is-long" : ""}`}
+              >
+                {question.prompt}
+              </span>
             </div>
           )}
           {isSplashing && (
             <div className="math-drops-splash" aria-hidden="true">
+              <span />
+              <span />
+              <span />
+              <span />
               <span />
               <span />
               <span />

@@ -23,6 +23,9 @@ describe("Fraction Café", () => {
       await page
         .getByRole("heading", { name: "Can I have one half?" })
         .waitFor();
+      await page
+        .getByRole("group", { name: "pizza divided into 2 equal pieces" })
+        .waitFor();
       await page.getByRole("button", { name: "Serve order" }).click();
       await page
         .getByRole("status")
@@ -32,6 +35,11 @@ describe("Fraction Café", () => {
       await page.getByRole("button", { name: "Serve order" }).click();
       await page
         .getByRole("heading", { name: "Can I have one quarter?" })
+        .waitFor();
+      await page
+        .getByRole("group", {
+          name: "chocolate bar divided into 4 equal pieces",
+        })
         .waitFor();
       await page.reload();
       await page
@@ -50,6 +58,20 @@ describe("Fraction Café", () => {
         await page
           .getByRole("heading", { name: `Can I have ${next}?` })
           .waitFor();
+        if (next === "three quarters")
+          await page
+            .getByRole("group", {
+              name: "blueberry pie divided into 4 equal pieces",
+            })
+            .waitFor();
+        if (next === "two quarters")
+          await page
+            .getByRole("group", { name: "lasagna divided into 4 equal pieces" })
+            .waitFor();
+        if (next === "one half")
+          await page
+            .getByRole("group", { name: "cake divided into 2 equal pieces" })
+            .waitFor();
       }
       await page.getByRole("button", { name: "Piece 1", exact: true }).click();
       await page.getByRole("button", { name: "Serve order" }).click();

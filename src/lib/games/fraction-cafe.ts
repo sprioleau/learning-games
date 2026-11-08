@@ -6,11 +6,24 @@ export type CafeOrder = {
 
 export const cafeOrders: CafeOrder[] = [
   { food: "pizza", numerator: 1, denominator: 2 },
-  { food: "pie", numerator: 1, denominator: 4 },
-  { food: "pizza", numerator: 3, denominator: 4 },
-  { food: "pie", numerator: 2, denominator: 4 },
-  { food: "pizza", numerator: 1, denominator: 2 },
+  { food: "chocolate", numerator: 1, denominator: 4 },
+  { food: "pie", numerator: 3, denominator: 4 },
+  { food: "lasagna", numerator: 2, denominator: 4 },
+  { food: "cake", numerator: 1, denominator: 2 },
 ];
+export function getCafeFood(food: string) {
+  const menu: Record<
+    string,
+    { label: string; shape: "circle" | "square" | "rectangle" }
+  > = {
+    pizza: { label: "pizza", shape: "circle" },
+    pie: { label: "blueberry pie", shape: "circle" },
+    chocolate: { label: "chocolate bar", shape: "square" },
+    lasagna: { label: "lasagna", shape: "rectangle" },
+    cake: { label: "cake", shape: "square" },
+  };
+  return menu[food] ?? menu.cake;
+}
 
 export function getFractionName(order: CafeOrder) {
   if (order.denominator === 2) return "one half";

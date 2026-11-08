@@ -90,6 +90,9 @@ describe("Math Drops", () => {
       expect(await input.getAttribute("autocomplete")).toBe("off");
       const panel = page.getByLabel("Falling math problem");
       const before = await panel.innerText();
+      const splash = page.locator(".math-drops-splash");
+      await splash.waitFor({ timeout: 20000 });
+      expect(await splash.locator("span").count()).toBe(9);
       await page
         .getByRole("status")
         .filter({ hasText: "Here's a new problem" })

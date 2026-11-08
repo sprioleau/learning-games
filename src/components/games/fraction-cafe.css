@@ -186,3 +186,22 @@
 .fraction-cafe-plate[data-shape="rectangle"] .fraction-cafe-slice span {
   transform: none;
 }
+
+.fraction-cafe-plate[data-food="pie"] {
+  background-image: url("/assets/game-art/fraction-cafe-pie.webp");
+}
+.fraction-cafe-plate[data-food="chocolate"] {
+  background-image: url("/assets/game-art/fraction-cafe-chocolate.webp");
+}
+.fraction-cafe-plate[data-food="lasagna"] {
+  background-image: url("/assets/game-art/fraction-cafe-lasagna.webp");
+}
+.fraction-cafe-plate[data-shape="square"][data-pieces="2"] {
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: 1fr;
+}
+
+.fraction-cafe-plate[data-shape="square"][data-pieces="2"]
+  .fraction-cafe-slice {
+  border-radius: 0 !important;
+}
