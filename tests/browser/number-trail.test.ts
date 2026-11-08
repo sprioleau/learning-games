@@ -18,6 +18,15 @@ describe("Number Trail", () => {
     });
     const page = await context.newPage();
     try {
+      await page.addInitScript(() => {
+        const clips: string[] = [];
+        Object.defineProperty(window, "mathClips", { value: clips });
+        HTMLMediaElement.prototype.play = function () {
+          clips.push(new URL(this.src).pathname);
+          queueMicrotask(() => this.dispatchEvent(new Event("ended")));
+          return Promise.resolve();
+        };
+      });
       await page.goto(`${baseURL}/play/number-trail`);
       await page.getByRole("button", { name: "Subtract", exact: true }).click();
       await page.getByRole("button", { name: "Let’s play" }).click();
@@ -31,6 +40,22 @@ describe("Number Trail", () => {
           name: "Choose the answer on the number line",
         });
         if (index === 0) {
+          await page
+            .getByRole("button", { name: "Hear the math problem" })
+            .click();
+          await page.waitForFunction(
+            () =>
+              (window as unknown as { mathClips: string[] }).mathClips.length >=
+              3,
+          );
+          const clips = await page.evaluate(
+            () => (window as unknown as { mathClips: string[] }).mathClips,
+          );
+          expect(clips.slice(0, 3)).toEqual([
+            `/assets/audio/parts/number-${match![1]}.mp3`,
+            "/assets/audio/parts/minus.mp3",
+            `/assets/audio/parts/number-${match![2]}.mp3`,
+          ]);
           const answerButton = numbers.getByRole("button", {
             name: new RegExp(`^Choose ${answer}(?:,|$)`),
           });

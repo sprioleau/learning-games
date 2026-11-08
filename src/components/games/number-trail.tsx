@@ -1,14 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Play, RotateCcw } from "lucide-react";
+import { Play, RotateCcw, Volume2 } from "lucide-react";
 import { GameScene, SceneHeader } from "@/components/scene/game-scene";
 import { Mascot } from "@/components/hub/mascot";
 import { Button } from "@/components/ui/button";
 import { Celebration } from "@/components/games/celebration";
 import { useGamePlatform } from "@/components/games/game-provider";
-import { playSound, prepareGameAudio } from "@/lib/platform/audio";
+import {
+  playSound,
+  prepareGameAudio,
+  speakMathExpression,
+  warmMathExpression,
+} from "@/lib/platform/audio";
 import { artwork } from "@/lib/games/artwork";
 import { getWorld } from "@/lib/games/worlds";
 import type { TrailOperation, TrailQuestion } from "@/lib/games/number-trail";
@@ -31,6 +36,12 @@ export function NumberTrail() {
     session?.phase === "playing" && session.questions[session.cursor]
       ? (JSON.parse(session.questions[session.cursor].payload) as TrailQuestion)
       : null;
+  const expression = question
+    ? `${question.start} ${question.operation === "addition" ? "+" : "−"} ${question.steps}`
+    : null;
+  useEffect(() => {
+    if (expression) warmMathExpression(expression);
+  }, [expression]);
   const world = getWorld(
     session?.worldId ?? state?.session?.worldId ?? "jungle",
   );
@@ -193,6 +204,19 @@ export function NumberTrail() {
                     {question.operation === "addition" ? "+" : "−"}{" "}
                     {question.steps} = ?
                   </div>
+                  <Button
+                    className="read-math-button"
+                    variant="ghost"
+                    aria-label="Hear the math problem"
+                    onClick={() =>
+                      speakMathExpression(
+                        `${question.start} ${question.operation === "addition" ? "+" : "−"} ${question.steps}`,
+                        state?.options.speechRate ?? "gentle",
+                      )
+                    }
+                  >
+                    <Volume2 aria-hidden="true" />
+                  </Button>
                 </div>
                 <p>
                   Start at <strong>{question.start}</strong>. Hop{" "}

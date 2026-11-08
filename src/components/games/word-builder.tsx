@@ -137,8 +137,13 @@ function WordRound({ session }: { session: ActivitySession }) {
   }
   function speak(text: string) {
     prepareGameAudio();
-    speakWord(text, state?.options.speechRate ?? "gentle", () =>
-      setMessage(`The word is ${puzzle.word}.`),
+    speakWord(
+      text,
+      state?.options.speechRate ?? "gentle",
+      () => setMessage(`The word is ${puzzle.word}.`),
+      {
+        recordingPath: `/assets/audio/builder/${puzzle.word}${text === puzzle.word ? "" : "-sentence"}.mp3`,
+      },
     );
   }
   async function checkWord() {

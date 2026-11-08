@@ -38,6 +38,50 @@ const words = [
     }),
   ),
 ];
+const activitySource = ts.createSourceFile(
+  "activity.ts",
+  await readFile("src/lib/games/activity.ts", "utf8"),
+  ts.ScriptTarget.Latest,
+  true,
+);
+let puzzles;
+function findPuzzles(node) {
+  if (
+    ts.isVariableDeclaration(node) &&
+    node.name.getText(activitySource) === "wordPuzzles"
+  )
+    puzzles = node.initializer;
+  ts.forEachChild(node, findPuzzles);
+}
+findPuzzles(activitySource);
+if (!puzzles || !ts.isArrayLiteralExpression(puzzles))
+  throw new Error("Could not find Word Builder puzzles.");
+const builderEntries = puzzles.elements.flatMap((puzzle) => {
+  if (!ts.isObjectLiteralExpression(puzzle))
+    throw new Error("Invalid Word Builder puzzle.");
+  const fields = Object.fromEntries(
+    puzzle.properties
+      .filter(ts.isPropertyAssignment)
+      .map((property) => [
+        property.name.getText(activitySource),
+        ts.isStringLiteral(property.initializer)
+          ? property.initializer.text
+          : null,
+      ]),
+  );
+  if (!fields.word || !/^[a-z]+$/.test(fields.word) || !fields.sentence)
+    throw new Error("Invalid Word Builder text.");
+  return [
+    {
+      text: fields.word,
+      path: `public/assets/audio/builder/${fields.word}.mp3`,
+    },
+    {
+      text: fields.sentence,
+      path: `public/assets/audio/builder/${fields.word}-sentence.mp3`,
+    },
+  ];
+});
 const voiceId = "SAz9YHcvj6GT2YYXdXww";
 const modelId = "eleven_flash_v2_5";
 const manifestPath = "public/assets/audio/manifest.json";
@@ -49,6 +93,7 @@ try {
   /* A first run has no manifest. */
 }
 const entries = [
+  ...builderEntries,
   ...words.map((word) => ({
     text: word,
     path: `public/assets/audio/bingo/${word}.mp3`,
@@ -57,9 +102,24 @@ const entries = [
     text,
     path: `public/assets/audio/instructions/${id}.mp3`,
   })),
+  ...Array.from({ length: 101 }, (_, number) => ({
+    text: String(number),
+    path: `public/assets/audio/parts/number-${number}.mp3`,
+  })),
+  ...Object.entries({
+    plus: "plus",
+    minus: "minus",
+    times: "times",
+    divide: "divided by",
+  }).map(([id, text]) => ({
+    text,
+    path: `public/assets/audio/parts/${id}.mp3`,
+  })),
 ];
 const client = isDryRun ? null : new ElevenLabsClient();
 await mkdir("public/assets/audio/instructions", { recursive: true });
+await mkdir("public/assets/audio/parts", { recursive: true });
+await mkdir("public/assets/audio/builder", { recursive: true });
 for (const { text, path } of entries) {
   const hash = createHash("sha256")
     .update(JSON.stringify({ text, voiceId, modelId }))

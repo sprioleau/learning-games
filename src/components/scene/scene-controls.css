@@ -12,3 +12,22 @@
   width: 1.5cqw !important;
   height: 1.5cqw !important;
 }
+.game-scene .read-math-button {
+  width: 3cqw !important;
+  height: 3cqw !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  background: #fff5dc !important;
+  color: #4e3a28 !important;
+}
+.game-scene .read-math-button svg {
+  width: 1.6cqw !important;
+  height: 1.6cqw !important;
+}
+.game-scene .math-drops-read {
+  position: absolute;
+  top: 5%;
+  right: 5%;
+  z-index: 5;
+}

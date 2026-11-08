@@ -22,6 +22,7 @@ vi.mock("@/components/games/celebration", () => ({
 vi.mock("@/lib/platform/audio", () => ({
   prepareGameAudio: vi.fn(),
   playSound: vi.fn(),
+  warmMathExpression: vi.fn(),
 }));
 afterEach(() => {
   vi.useRealTimers();

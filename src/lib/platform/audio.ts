@@ -104,6 +104,88 @@ let playbackGeneration = 0;
 let cancelPendingSpeech: (() => void) | null = null;
 const recordedWords = new Map<string, HTMLAudioElement>();
 
+export function warmMathExpression(expression: string) {
+  if (typeof window === "undefined") return;
+  const match = expression.match(/^\s*(\d+)\s*([+−×÷-])\s*(\d+)\s*$/);
+  if (!match) return;
+  const operators: Record<string, string> = {
+    "+": "plus",
+    "−": "minus",
+    "-": "minus",
+    "×": "times",
+    "÷": "divide",
+  };
+  for (const part of [
+    `number-${Number(match[1])}`,
+    operators[match[2]],
+    `number-${Number(match[3])}`,
+  ]) {
+    const path = `/assets/audio/parts/${part}.mp3`;
+    if (recordedWords.has(path)) continue;
+    const audio = new Audio(path);
+    audio.preload = "auto";
+    audio.load();
+    recordedWords.set(path, audio);
+  }
+}
+
+export function speakMathExpression(
+  expression: string,
+  rate: "gentle" | "normal",
+) {
+  const match = expression.match(/^\s*(\d+)\s*([+−×÷-])\s*(\d+)\s*$/);
+  if (!match) {
+    speakWord(expression, rate);
+    return;
+  }
+  const operators: Record<string, string> = {
+    "+": "plus",
+    "−": "minus",
+    "-": "minus",
+    "×": "times",
+    "÷": "divide",
+  };
+  const parts = [
+    `number-${Number(match[1])}`,
+    operators[match[2]],
+    `number-${Number(match[3])}`,
+  ];
+  stopSpeaking();
+  const generation = playbackGeneration;
+  let active: HTMLAudioElement | null = null;
+  let index = 0;
+  setBackgroundMusicDucked(true);
+  function cleanup() {
+    if (active) {
+      active.pause();
+      active.onended = null;
+      active.onerror = null;
+    }
+    setBackgroundMusicDucked(false);
+  }
+  function fallback() {
+    if (generation !== playbackGeneration) return;
+    cleanup();
+    speakWord(expression, rate);
+  }
+  function playNext() {
+    if (generation !== playbackGeneration) return;
+    if (index >= parts.length) {
+      cleanup();
+      return;
+    }
+    const path = `/assets/audio/parts/${parts[index++]}.mp3`;
+    if (!recordedWords.has(path)) recordedWords.set(path, new Audio(path));
+    active = recordedWords.get(path)!;
+    active.currentTime = 0;
+    active.onended = playNext;
+    active.onerror = fallback;
+    void active.play().catch(fallback);
+  }
+  cancelPendingSpeech = cleanup;
+  playNext();
+}
+
 export function warmBingoVoice(words: string[]) {
   if (typeof window === "undefined") return;
   for (const word of words) {

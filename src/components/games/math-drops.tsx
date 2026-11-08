@@ -18,6 +18,8 @@ import { Celebration } from "@/components/games/celebration";
 import { useGamePlatform } from "@/components/games/game-provider";
 import { mathOperations, type MathOperation } from "@/lib/games/math-drops";
 import { getWorld } from "@/lib/games/worlds";
+import { Volume2 } from "lucide-react";
+import { speakMathExpression, warmMathExpression } from "@/lib/platform/audio";
 import { playSound, prepareGameAudio } from "@/lib/platform/audio";
 import "./math-drops.css";
 
@@ -50,6 +52,9 @@ export function MathDrops() {
   const isPlaying = session?.phase === "playing" && !isChoosing;
   const isWon = session?.phase === "won" && !isChoosing;
   const question = isPlaying ? session?.questions[session.cursor] : null;
+  useEffect(() => {
+    if (question) warmMathExpression(question.prompt);
+  }, [question]);
   const correctCount = session?.cursor ?? 0;
   const world = getWorld(
     session?.worldId ?? state?.session?.worldId ?? "jungle",
@@ -284,6 +289,21 @@ export function MathDrops() {
             </svg>
           </div>
           <div className="math-drops-threshold" aria-hidden="true" />
+          {question && isPlaying && !isSplashing && (
+            <Button
+              variant="ghost"
+              className="read-math-button math-drops-read"
+              aria-label="Hear the math problem"
+              onClick={() =>
+                speakMathExpression(
+                  question.prompt,
+                  state?.options.speechRate ?? "gentle",
+                )
+              }
+            >
+              <Volume2 aria-hidden="true" />
+            </Button>
+          )}
           {question && isPlaying && !isSplashing && (
             <div
               className="math-drops-drop"

@@ -15,3 +15,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Regular comments use multiline block syntax. Reserve JSDoc for actual tooling.
 - Vitest is the test runner. Test meaningful behavior, with accessible labels for interactive queries. Use test IDs only when no accessible query is possible.
 - Run `npm run check` and the relevant browser flow for game changes. See `docs/architecture.md`.
+
+## In-game speech
+
+- Every new or changed child-facing game instruction, menu label, feedback message, or prompt must have a corresponding prerecorded narration path using the selected ElevenLabs voice. Cover dynamic text with reusable prerecorded components where practical.
+- Use `scripts/generate-bingo-voice.mjs` and the audio catalog workflow in `docs/speech.md`. Run the script with `--dry-run` first, inspect the planned work, then generate only missing or changed clips. Commit the audio files and `public/assets/audio/manifest.json` together.
+- Never commit or print the ElevenLabs API key. Use the local ignored `.env.local` and never call ElevenLabs from a child's gameplay session.
