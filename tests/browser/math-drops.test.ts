@@ -9,6 +9,38 @@ afterAll(async () => {
   await browser?.close();
 });
 describe("Math Drops", () => {
+  it("keeps the keypad usable on a small touch screen and checks an answer", async () => {
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 844 },
+      hasTouch: true,
+      isMobile: true,
+      deviceScaleFactor: 2,
+    });
+    const page = await context.newPage();
+    try {
+      await page.goto(`${baseURL}/play/math-drops`);
+      await page.getByRole("button", { name: "Start playing" }).tap();
+      const input = page.getByRole("textbox", { name: "Your answer" });
+      await input.waitFor();
+      expect(await input.getAttribute("inputmode")).toBe("none");
+      expect(await input.getAttribute("readonly")).not.toBeNull();
+      const drop = page.locator(".math-drops-drop");
+      const first = await drop.boundingBox();
+      await page.waitForTimeout(500);
+      const second = await drop.boundingBox();
+      expect(second!.y).toBeGreaterThan(first!.y);
+      const text = await page.getByLabel("Falling math problem").innerText();
+      const parts = text.match(/(\d+) \+ (\d+)/);
+      expect(parts).not.toBeNull();
+      const answer = String(Number(parts![1]) + Number(parts![2]));
+      for (const digit of answer)
+        await page.getByRole("button", { name: digit, exact: true }).tap();
+      await page.getByRole("button", { name: "Check answer" }).tap();
+      await page.getByText("1 / 8 solved", { exact: true }).waitFor();
+    } finally {
+      await context.close();
+    }
+  }, 60000);
   it("plays subtraction using the on-screen number pad and celebrates a full round", async () => {
     const context = await browser.newContext({
       viewport: { width: 1280, height: 800 },
@@ -60,7 +92,7 @@ describe("Math Drops", () => {
             await page
               .getByRole("button", { name: digit, exact: true })
               .click();
-          await page.getByRole("button", { name: "Go!" }).click();
+          await page.getByRole("button", { name: "Check answer" }).click();
         }
         await page
           .getByText(`${count + 1} / 8 solved`, { exact: true })

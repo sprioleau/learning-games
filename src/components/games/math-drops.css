@@ -144,7 +144,7 @@
 }
 .math-drops-drop {
   position: absolute;
-  top: var(--drop-top);
+  top: 10%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1;
@@ -159,7 +159,15 @@
   font-size: 2.2cqw;
   font-weight: 900;
   filter: drop-shadow(0 0.25cqw 0.2cqw #285c8060);
-  transition: top 0.1s linear;
+  animation: math-drop-fall var(--drop-duration) linear forwards;
+}
+@keyframes math-drop-fall {
+  from {
+    top: 10%;
+  }
+  to {
+    top: calc(72% - 10cqw);
+  }
 }
 .math-drops-splash {
   position: absolute;
@@ -275,6 +283,28 @@
 .math-drops-keypad button {
   font-size: 1.5cqw;
   padding: 0.4cqw;
+}
+.math-drops-keypad .math-drops-submit {
+  background: #ffcf38;
+  border-color: #bd7a20;
+  color: #493015;
+  font-weight: 950;
+  box-shadow: 0 0.2cqw 0 #b57929;
+}
+.math-drops-keypad .math-drops-submit:disabled {
+  opacity: 0.75;
+}
+@media (pointer: coarse) {
+  .math-drops-area {
+    grid-template-columns: 21% 35% 40%;
+  }
+  .math-drops-keypad button {
+    min-height: 5cqw;
+    font-size: 2cqw;
+  }
+  .math-drops-answer {
+    gap: 0.4cqw;
+  }
 }
 .math-drops-feedback {
   font-size: 1.05cqw;

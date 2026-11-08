@@ -32,13 +32,41 @@ const operationLabels: Record<MathOperation, string> = {
 };
 type Speed = "gentle" | "quick";
 const speeds: Record<Speed, number> = { gentle: 20, quick: 12 };
+function FallingDrop({
+  prompt,
+  duration,
+  isPaused,
+}: {
+  prompt: string;
+  duration: number;
+  isPaused: boolean;
+}) {
+  return (
+    <div
+      className="math-drops-drop"
+      style={
+        {
+          "--drop-duration": `${duration}s`,
+          animationPlayState: isPaused ? "paused" : "running",
+        } as CSSProperties
+      }
+    >
+      <span
+        className={`math-drops-dropText ${/\d{2,}/.test(prompt) ? "is-long" : ""}`}
+      >
+        {prompt}
+      </span>
+    </div>
+  );
+}
 export function MathDrops() {
   const { state, send, isBusy, error, reload } = useGamePlatform();
   const [operation, setOperation] = useState<MathOperation>("addition");
   const [speed, setSpeed] = useState<Speed>("gentle");
   const [isChoosing, setIsChoosing] = useState(false);
-  const [remaining, setRemaining] = useState(speeds.gentle);
   const remainingRef = useRef(speeds.gentle);
+  const [isTouchInput, setIsTouchInput] = useState(false);
+  const [isPageHidden, setIsPageHidden] = useState(false);
   const answerRef = useRef<HTMLInputElement>(null);
   const [answer, setAnswer] = useState("");
   const [isPaused, setIsPaused] = useState(false);
@@ -60,6 +88,23 @@ export function MathDrops() {
     session?.worldId ?? state?.session?.worldId ?? "jungle",
   );
   const isSoundEnabled = state?.options.isSoundEnabled ?? true;
+  useEffect(() => {
+    const touch = window.matchMedia?.("(pointer: coarse)");
+    function syncTouch() {
+      setIsTouchInput(touch?.matches ?? false);
+    }
+    function syncVisibility() {
+      setIsPageHidden(document.hidden);
+    }
+    syncTouch();
+    syncVisibility();
+    touch?.addEventListener?.("change", syncTouch);
+    document.addEventListener("visibilitychange", syncVisibility);
+    return () => {
+      touch?.removeEventListener?.("change", syncTouch);
+      document.removeEventListener("visibilitychange", syncVisibility);
+    };
+  }, []);
   const skipExpiredDrop = useEffectEvent(async () => {
     if (!session) return;
     const result = await send({
@@ -77,18 +122,24 @@ export function MathDrops() {
       return;
     }
     remainingRef.current = speeds[speed];
-    setRemaining(speeds[speed]);
     setAnswer("");
     setMessage("Splash! Here's a new problem.");
   });
   useEffect(() => {
     if (!isPlaying || isPaused || isBusy) return;
     let splashTimer: number | undefined;
+    let lastTick = performance.now();
+    function resetTick() {
+      lastTick = performance.now();
+    }
+    document.addEventListener("visibilitychange", resetTick);
     const timer = window.setInterval(() => {
+      const now = performance.now();
+      const elapsed = (now - lastTick) / 1000;
+      lastTick = now;
       if (document.hidden) return;
-      const time = Math.max(0, remainingRef.current - 0.1);
+      const time = Math.max(0, remainingRef.current - elapsed);
       remainingRef.current = time;
-      setRemaining(time);
       if (time <= 0) {
         window.clearInterval(timer);
         setIsSplashing(true);
@@ -101,15 +152,16 @@ export function MathDrops() {
     return () => {
       window.clearInterval(timer);
       window.clearTimeout(splashTimer);
+      document.removeEventListener("visibilitychange", resetTick);
     };
   }, [isPlaying, isPaused, isBusy, speed, isSoundEnabled]);
   useEffect(() => {
-    if (!isPlaying || isPaused || isSplashing) return;
+    if (!isPlaying || isPaused || isSplashing || isTouchInput) return;
     const frame = window.requestAnimationFrame(() =>
       answerRef.current?.focus({ preventScroll: true }),
     );
     return () => window.cancelAnimationFrame(frame);
-  }, [isPlaying, isPaused, isSplashing]);
+  }, [isPlaying, isPaused, isSplashing, isTouchInput]);
   async function startRound(mode: MathOperation = operation) {
     if (!state || isBusy) return;
     prepareGameAudio();
@@ -121,7 +173,6 @@ export function MathDrops() {
     });
     if (!result) return;
     remainingRef.current = speeds[speed];
-    setRemaining(speeds[speed]);
     setAnswer("");
     setMessage("Solve the falling problem before it reaches the water!");
     setIsPaused(false);
@@ -150,7 +201,7 @@ export function MathDrops() {
       isSoundEnabled,
     );
     setAnswer("");
-    answerRef.current?.focus({ preventScroll: true });
+    if (!isTouchInput) answerRef.current?.focus({ preventScroll: true });
     const result = await send({
       kind: "activity-answer",
       gameId: "math-drops",
@@ -166,7 +217,6 @@ export function MathDrops() {
     } else if (result.outcome === "correct") {
       setMessage("You got it! Here comes another.");
       remainingRef.current = speeds[speed];
-      setRemaining(speeds[speed]);
     }
   }
   function addDigit(digit: string) {
@@ -305,20 +355,12 @@ export function MathDrops() {
             </Button>
           )}
           {question && isPlaying && !isSplashing && (
-            <div
-              className="math-drops-drop"
-              style={
-                {
-                  "--drop-top": `calc(10% + (62% - 10cqw) * ${1 - remaining / speeds[speed]})`,
-                } as CSSProperties
-              }
-            >
-              <span
-                className={`math-drops-dropText ${/\d{2,}/.test(question.prompt) ? "is-long" : ""}`}
-              >
-                {question.prompt}
-              </span>
-            </div>
+            <FallingDrop
+              key={`${session?.id}-${session?.revision}`}
+              prompt={question.prompt}
+              duration={speeds[speed]}
+              isPaused={isPaused || isBusy || isPageHidden}
+            />
           )}
           {isSplashing && (
             <div className="math-drops-splash" aria-hidden="true">
@@ -350,10 +392,27 @@ export function MathDrops() {
             autoComplete="off"
             autoCorrect="off"
             spellCheck={false}
-            inputMode="numeric"
+            inputMode={isTouchInput ? "none" : "numeric"}
+            readOnly={isTouchInput}
             pattern="[0-9]*"
             value={answer}
             disabled={!isPlaying || isPaused || isSplashing}
+            onKeyDown={(event) => {
+              if (
+                !isTouchInput ||
+                event.metaKey ||
+                event.ctrlKey ||
+                event.altKey
+              )
+                return;
+              if (/^[0-9]$/.test(event.key)) {
+                event.preventDefault();
+                addDigit(event.key);
+              } else if (event.key === "Backspace" || event.key === "Delete") {
+                event.preventDefault();
+                setAnswer((current) => current.slice(0, -1));
+              }
+            }}
             onChange={(event) =>
               setAnswer(event.target.value.replace(/\D/g, "").slice(0, 3))
             }
@@ -390,11 +449,13 @@ export function MathDrops() {
             <Button
               type="submit"
               variant="outline"
+              className="math-drops-submit"
+              aria-label="Check answer"
               disabled={
                 !isPlaying || isPaused || isSplashing || isBusy || !answer
               }
             >
-              Go!
+              Check
             </Button>
           </div>
           <div className="math-drops-feedback" role="status" aria-live="polite">

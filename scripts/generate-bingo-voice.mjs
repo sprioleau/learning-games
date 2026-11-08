@@ -93,6 +93,7 @@ try {
   /* A first run has no manifest. */
 }
 const entries = [
+  { text: "Check", path: "public/assets/audio/labels/check.mp3" },
   ...builderEntries,
   ...words.map((word) => ({
     text: word,
@@ -120,6 +121,7 @@ const client = isDryRun ? null : new ElevenLabsClient();
 await mkdir("public/assets/audio/instructions", { recursive: true });
 await mkdir("public/assets/audio/parts", { recursive: true });
 await mkdir("public/assets/audio/builder", { recursive: true });
+await mkdir("public/assets/audio/labels", { recursive: true });
 for (const { text, path } of entries) {
   const hash = createHash("sha256")
     .update(JSON.stringify({ text, voiceId, modelId }))

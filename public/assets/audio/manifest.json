@@ -180,5 +180,6 @@
   "public/assets/audio/builder/frog.mp3": "7b0620ed0500452a4141bb40e8f3ab538eb56122936737bc5ddf280202546cde",
   "public/assets/audio/builder/frog-sentence.mp3": "371c60cfcb4caf5bfa7e7a800c69f7bf9e330bd739aba1996eee9172524c05e5",
   "public/assets/audio/builder/boat.mp3": "0002538bfe59bcd346b29eb3d7c5673e1292bac0d63165fbb401b75a323d2f36",
-  "public/assets/audio/builder/boat-sentence.mp3": "61a8d8d5beb783ed505f4aba0cda97c397bb20ee06c8b8c9b0cb81c3a446678e"
+  "public/assets/audio/builder/boat-sentence.mp3": "61a8d8d5beb783ed505f4aba0cda97c397bb20ee06c8b8c9b0cb81c3a446678e",
+  "public/assets/audio/labels/check.mp3": "36d950376391c2b2c12a4332c405d485fa9108b4c1db86837e0b85ce30324e5c"
 }
