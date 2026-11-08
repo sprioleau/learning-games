@@ -1,3 +1,39 @@
+import { worlds, type WorldId } from "./worlds";
+
+export const puzzleScenes = worlds.flatMap((world) =>
+  [0, 1, 2].map((index) => ({
+    id: `${world.id}-${index}`,
+    worldId: world.id,
+    index,
+    name: `${world.shortName} ${["Adventure", "Friends", "Discovery"][index]}`,
+    image:
+      world.id === "jungle" && index === 0
+        ? "/assets/puzzles/jungle-explorer.webp"
+        : `/assets/puzzles/${world.id}-${index}.webp`,
+  })),
+);
+export function getPuzzleScene(worldId: string, index: number) {
+  return (
+    puzzleScenes.find(
+      (scene) => scene.worldId === worldId && scene.index === index,
+    ) ?? puzzleScenes[0]
+  );
+}
+export function getSavedPuzzleScene(worldId: string, payload: string) {
+  try {
+    const parsed: unknown = JSON.parse(payload);
+    if (
+      typeof parsed === "object" &&
+      parsed !== null &&
+      "sceneIndex" in parsed &&
+      typeof parsed.sceneIndex === "number"
+    )
+      return getPuzzleScene(worldId, parsed.sceneIndex);
+  } catch {
+    /* Older or damaged saves fall back to the first picture. */
+  }
+  return getPuzzleScene(worldId as WorldId, 0);
+}
 export const puzzleSizes = [
   { id: "3x3", label: "9 pieces", rows: 3, columns: 3 },
   { id: "4x5", label: "20 pieces", rows: 4, columns: 5 },

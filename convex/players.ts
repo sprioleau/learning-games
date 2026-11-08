@@ -120,6 +120,8 @@ export const command = mutation({
         input.gameId,
         input.worldId,
         input.mode,
+        Date.now(),
+        input.sceneIndex,
       );
       state = saveActivitySession(state, session);
     }

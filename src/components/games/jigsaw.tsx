@@ -7,6 +7,13 @@ import {
   useState,
   type PointerEvent,
 } from "react";
+import Image from "next/image";
+import {
+  getWorld,
+  isWorldUnlocked,
+  worlds,
+  type WorldId,
+} from "@/lib/games/worlds";
 import { GameScene, SceneHeader } from "@/components/scene/game-scene";
 import { Button } from "@/components/ui/button";
 import { Mascot } from "@/components/hub/mascot";
@@ -21,6 +28,9 @@ import {
   puzzleBoard,
   puzzleCanvas,
   puzzleSizes,
+  puzzleScenes,
+  getPuzzleScene,
+  getSavedPuzzleScene,
   puzzleTray,
   type PuzzlePiece,
   type PuzzleSize,
@@ -75,12 +85,15 @@ type Drag = {
   startRotation: number;
 };
 export function Jigsaw() {
-  const { state, send, isBusy, error, reload } = useGamePlatform();
+  const { state, send, isBusy, error, reload, isAdminMode } = useGamePlatform();
   const savedSession = state?.activitySessions.find(
     (item) => item.gameId === "jigsaw",
   );
   const restoredId = useRef<string | null>(null);
   const isStarting = useRef(false);
+  const [worldId, setWorldId] = useState<WorldId>("jungle");
+  const [sceneIndex, setSceneIndex] = useState(0);
+  const scene = getPuzzleScene(worldId, sceneIndex);
   const [sizeId, setSizeId] = useState<PuzzleSize["id"]>("3x3");
   const size = puzzleSizes.find((item) => item.id === sizeId) ?? puzzleSizes[0];
   const [pieces, setPieces] = useState<PuzzlePiece[]>([]);
@@ -94,9 +107,9 @@ export function Jigsaw() {
   const [message, setMessage] = useState(
     "Open the box and find where each piece belongs!",
   );
-  const [isImageReady, setIsImageReady] = useState(false);
+  const [loadedImage, setLoadedImage] = useState<HTMLImageElement | null>(null);
+  const isImageReady = loadedImage?.getAttribute("src") === scene.image;
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const imageRef = useRef<HTMLImageElement | null>(null);
   const drag = useRef<Drag | null>(null);
   const openingTimer = useRef<number | null>(null);
   const paths = useMemo(() => {
@@ -146,6 +159,12 @@ export function Jigsaw() {
       );
       piecesRef.current = restored;
       setPieces(restored);
+      const savedScene = getSavedPuzzleScene(
+        savedSession.worldId,
+        savedSession.questions[0]?.payload ?? "{}",
+      );
+      setWorldId(savedScene.worldId);
+      setSceneIndex(savedScene.index);
       setSizeId(savedSize.id);
       setIsStarted(true);
       setMessage(
@@ -159,16 +178,15 @@ export function Jigsaw() {
   useEffect(() => {
     const image = new window.Image();
     image.onload = () => {
-      imageRef.current = image;
-      setIsImageReady(true);
+      setLoadedImage(image);
     };
-    image.src = "/assets/puzzles/jungle-explorer.webp";
+    image.src = scene.image;
     return () => {
       image.onload = null;
       if (openingTimer.current !== null)
         window.clearTimeout(openingTimer.current);
     };
-  }, []);
+  }, [scene.image]);
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
     const context = canvas?.getContext("2d");
@@ -201,11 +219,11 @@ export function Jigsaw() {
       puzzleBoard.size + 10,
       puzzleBoard.size + 10,
     );
-    if (isImageReady && imageRef.current) {
+    if (isImageReady && loadedImage) {
       context.save();
       context.globalAlpha = 0.17;
       context.drawImage(
-        imageRef.current,
+        loadedImage,
         puzzleBoard.x,
         puzzleBoard.y,
         puzzleBoard.size,
@@ -241,11 +259,11 @@ export function Jigsaw() {
       context.fillStyle = "#fff5d5";
       context.fill(path);
       context.shadowColor = "transparent";
-      if (isImageReady && imageRef.current) {
+      if (isImageReady && loadedImage) {
         context.save();
         context.clip(path);
         context.drawImage(
-          imageRef.current,
+          loadedImage,
           -piece.column * (puzzleBoard.size / size.columns),
           -piece.row * (puzzleBoard.size / size.rows),
           puzzleBoard.size,
@@ -268,7 +286,7 @@ export function Jigsaw() {
       }
       context.restore();
     }
-  }, [pieces, size, paths, isKeyboardOpen, isImageReady]);
+  }, [pieces, size, paths, isKeyboardOpen, isImageReady, loadedImage]);
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -286,7 +304,8 @@ export function Jigsaw() {
       kind: "activity-start",
       gameId: "jigsaw",
       mode: size.id,
-      worldId: "jungle",
+      worldId,
+      sceneIndex,
     });
     if (!result) {
       isStarting.current = false;
@@ -504,8 +523,8 @@ export function Jigsaw() {
     );
   }
   return (
-    <GameScene className="jigsaw-scene">
-      <SceneHeader title="Jungle Jigsaw" />
+    <GameScene className="jigsaw-scene" world={worldId}>
+      <SceneHeader title={`${getWorld(worldId).shortName} Jigsaw`} />
       {error && (
         <div className="scene-message scene-error" role="alert">
           {error}
@@ -522,7 +541,53 @@ export function Jigsaw() {
             aria-label="Choose a puzzle"
           >
             <h2>Let’s make a picture!</h2>
-            <p>Pick a puzzle size, then open the box.</p>
+            <p>Choose a world, a picture, and a puzzle size.</p>
+            <div
+              className="jigsaw-world-choice"
+              role="group"
+              aria-label="Puzzle world"
+            >
+              {worlds.map((world) => {
+                const isLocked =
+                  !isAdminMode && !isWorldUnlocked(world.id, state?.stars ?? 0);
+                return (
+                  <Button
+                    key={world.id}
+                    variant="outline"
+                    aria-pressed={worldId === world.id}
+                    disabled={isOpening || isLocked}
+                    onClick={() => {
+                      setWorldId(world.id);
+                      setSceneIndex(0);
+                    }}
+                  >
+                    {world.shortName}
+                    {isLocked ? ` · ${world.starsRequired} stars` : ""}
+                  </Button>
+                );
+              })}
+            </div>
+            <div
+              className="jigsaw-scene-choice"
+              role="group"
+              aria-label="Puzzle picture"
+            >
+              {puzzleScenes
+                .filter((item) => item.worldId === worldId)
+                .map((item) => (
+                  <button
+                    type="button"
+                    key={item.id}
+                    aria-label={item.name}
+                    aria-pressed={sceneIndex === item.index}
+                    disabled={isOpening}
+                    onClick={() => setSceneIndex(item.index)}
+                  >
+                    <Image src={item.image} alt="" width={180} height={180} />
+                    <span>{item.name}</span>
+                  </button>
+                ))}
+            </div>
             <div
               className="jigsaw-size-choice"
               role="group"
@@ -543,15 +608,12 @@ export function Jigsaw() {
             <button
               type="button"
               className={`jigsaw-box ${isOpening ? "is-opening" : ""}`}
+              style={{ backgroundImage: `url(${scene.image})` }}
               aria-label="Open puzzle box"
               disabled={isOpening || isBusy || !state}
               onClick={openBox}
             >
-              <span>
-                JUNGLE
-                <br />
-                JIGSAW
-              </span>
+              <span>OPEN BOX</span>
             </button>
           </section>
         </>
@@ -561,7 +623,7 @@ export function Jigsaw() {
             ref={canvasRef}
             className="jigsaw-canvas"
             role="img"
-            aria-label="Jungle puzzle board and scattered pieces"
+            aria-label={`${getWorld(worldId).shortName} puzzle board and scattered pieces`}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={(event) => finishPointer(event, false)}

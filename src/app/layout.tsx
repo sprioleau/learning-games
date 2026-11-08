@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { GameProvider } from "@/components/games/game-provider";
+import { BackgroundMusic } from "@/components/scene/background-music";
 import "./globals.css";
 const nunito = localFont({
   src: "../../node_modules/@fontsource-variable/nunito-sans/files/nunito-sans-latin-wght-normal.woff2",
@@ -45,7 +46,10 @@ export default function RootLayout({
         <a className="skip-link" href="#main-content">
           Skip to main content
         </a>
-        <GameProvider>{children}</GameProvider>
+        <GameProvider>
+          <BackgroundMusic />
+          {children}
+        </GameProvider>
       </body>
     </html>
   );

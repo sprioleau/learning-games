@@ -37,6 +37,7 @@ export const commandSchema = z.discriminatedUnion("kind", [
   z.object({
     kind: z.literal("activity-start"),
     gameId: activityGameSchema,
+    sceneIndex: z.number().int().min(0).max(2).optional(),
     mode: activityModeSchema,
     worldId: z.enum(["jungle", "desert", "arctic", "city", "ocean"]),
   }),

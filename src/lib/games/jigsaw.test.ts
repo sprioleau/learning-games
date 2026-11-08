@@ -3,6 +3,8 @@ import {
   createPuzzlePieces,
   getPieceEdges,
   getPieceTarget,
+  getSavedPuzzleScene,
+  puzzleScenes,
   isNearPieceTarget,
   puzzleBoard,
   puzzleSizes,
@@ -49,5 +51,20 @@ describe("jigsaw pieces", () => {
         size,
       ),
     ).toBe(false);
+  });
+});
+
+describe("puzzle picture collection", () => {
+  it("offers three distinct pictures per world", () => {
+    for (const world of ["jungle", "desert", "arctic", "city", "ocean"]) {
+      const scenes = puzzleScenes.filter((scene) => scene.worldId === world);
+      expect(scenes).toHaveLength(3);
+      expect(new Set(scenes.map((scene) => scene.image)).size).toBe(3);
+    }
+  });
+  it("restores the selected scene and falls back for older saves", () => {
+    expect(getSavedPuzzleScene("ocean", '{"sceneIndex":2}').id).toBe("ocean-2");
+    expect(getSavedPuzzleScene("jungle", "{}").id).toBe("jungle-0");
+    expect(getSavedPuzzleScene("jungle", "bad data").id).toBe("jungle-0");
   });
 });

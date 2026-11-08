@@ -9,6 +9,7 @@ export const gameOptionsSchema = z.object({
   wordSet: z.enum(["starter", "sight"]).default("starter"),
   hasWordHints: z.boolean().default(false),
   isSoundEnabled: z.boolean().default(true),
+  isMusicEnabled: z.boolean().default(true),
   isCelebrationEnabled: z.boolean().default(true),
   speechRate: z.enum(["gentle", "normal"]).default("gentle"),
 });
@@ -22,6 +23,7 @@ export const optionDefinitions = {
   },
   hasWordHints: { label: "Show the spoken word", scope: "assistance" },
   isSoundEnabled: { label: "Sound effects", scope: "presentation" },
+  isMusicEnabled: { label: "Background music", scope: "presentation" },
   isCelebrationEnabled: {
     label: "Celebration animations",
     scope: "presentation",

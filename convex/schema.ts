@@ -6,6 +6,7 @@ export const optionsValidator = v.object({
   wordSet: v.union(v.literal("starter"), v.literal("sight")),
   hasWordHints: v.boolean(),
   isSoundEnabled: v.boolean(),
+  isMusicEnabled: v.optional(v.boolean()),
   isCelebrationEnabled: v.boolean(),
   speechRate: v.union(v.literal("gentle"), v.literal("normal")),
 });

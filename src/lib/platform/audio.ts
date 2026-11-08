@@ -1,5 +1,7 @@
 "use client";
 
+import { setBackgroundMusicDucked } from "./music";
+
 let audioContext: AudioContext | null = null;
 export type SoundCue = "correct" | "incorrect" | "win" | "flip";
 let soundBuffers: Record<SoundCue, AudioBuffer> | null = null;
@@ -154,6 +156,7 @@ export function speakWord(
   let hasFailed = false;
 
   function cleanup() {
+    setBackgroundMusicDucked(false);
     if (voicesTimeout !== null) clearTimeout(voicesTimeout);
     if (repeatTimeout !== null) clearTimeout(repeatTimeout);
     synthesis.removeEventListener?.("voiceschanged", handleVoicesChanged);
@@ -172,6 +175,7 @@ export function speakWord(
   function dispatch(remaining: number, voice: SpeechSynthesisVoice | null) {
     if (generation !== playbackGeneration || hasFailed) return;
     try {
+      setBackgroundMusicDucked(true);
       utterance = new SpeechSynthesisUtterance(word);
       utterance.lang = "en-US";
       utterance.voice = voice;
@@ -233,6 +237,7 @@ export function speakWord(
 
 export function stopSpeaking() {
   playbackGeneration += 1;
+  setBackgroundMusicDucked(false);
   cancelPendingSpeech?.();
   cancelPendingSpeech = null;
   try {

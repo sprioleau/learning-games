@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
@@ -33,6 +33,135 @@ import { prepareGameAudio } from "@/lib/platform/audio";
 import { artwork } from "@/lib/games/artwork";
 import { gameRegistry } from "@/lib/platform/contracts";
 import { Mascot } from "./mascot";
+import "./world-unlock.css";
+
+const unlockStorageKey = "learning-games:world-unlocks:v1";
+
+type UnlockProgress = { observedStars: number; pendingWorldIds: WorldId[] };
+
+function trackWorldUnlocks(stars: number): WorldId[] {
+  try {
+    const saved = localStorage.getItem(unlockStorageKey);
+    const progress = saved ? (JSON.parse(saved) as UnlockProgress) : null;
+    const hasValidProgress =
+      progress &&
+      Number.isFinite(progress.observedStars) &&
+      Array.isArray(progress.pendingWorldIds);
+    const pendingWorldIds =
+      hasValidProgress && stars >= progress.observedStars
+        ? progress.pendingWorldIds.filter((id) =>
+            worlds.some(
+              (world) => world.id === id && world.starsRequired <= stars,
+            ),
+          )
+        : [];
+    if (hasValidProgress && stars >= progress.observedStars) {
+      for (const world of worlds) {
+        if (
+          world.starsRequired > progress.observedStars &&
+          world.starsRequired <= stars &&
+          !pendingWorldIds.includes(world.id)
+        ) {
+          pendingWorldIds.push(world.id);
+        }
+      }
+    }
+    localStorage.setItem(
+      unlockStorageKey,
+      JSON.stringify({ observedStars: stars, pendingWorldIds }),
+    );
+    return pendingWorldIds;
+  } catch {
+    return [];
+  }
+}
+
+function acknowledgeWorldUnlock(worldId: WorldId) {
+  try {
+    const saved = localStorage.getItem(unlockStorageKey);
+    if (!saved) return;
+    const progress = JSON.parse(saved) as UnlockProgress;
+    progress.pendingWorldIds = progress.pendingWorldIds.filter(
+      (id) => id !== worldId,
+    );
+    localStorage.setItem(unlockStorageKey, JSON.stringify(progress));
+  } catch {
+    /* Storage may be unavailable in private browsing. */
+  }
+}
+
+function Chain({ isReversed }: { isReversed: boolean }) {
+  return (
+    <svg
+      className={`world-chain ${isReversed ? "world-chain-two" : "world-chain-one"}`}
+      viewBox="0 0 200 140"
+      preserveAspectRatio="xMidYMid meet"
+      focusable="false"
+      aria-hidden="true"
+    >
+      {Array.from({ length: 21 }, (_, index) => {
+        const progress = index / 20;
+        const x = 10 + progress * 180;
+        const y =
+          (isReversed ? 100 - progress * 70 : 30 + progress * 70) +
+          20 * Math.sin(Math.PI * progress);
+        const slope =
+          (isReversed ? -70 : 70) + 20 * Math.PI * Math.cos(Math.PI * progress);
+        const angle = (Math.atan2(slope, 180) * 180) / Math.PI;
+        return (
+          <g key={index} transform={`translate(${x} ${y}) rotate(${angle})`}>
+            <ellipse
+              rx="7.2"
+              ry={index % 2 ? "3.2" : "4.2"}
+              fill="none"
+              stroke="#795019"
+              strokeWidth="3.8"
+            />
+            <ellipse
+              rx="7.2"
+              ry={index % 2 ? "3.2" : "4.2"}
+              fill="none"
+              stroke={index % 2 ? "#e8ab34" : "#ffd878"}
+              strokeWidth="2.1"
+            />
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
+
+function LockDecoration({
+  isCelebrating = false,
+}: {
+  isCelebrating?: boolean;
+}) {
+  return (
+    <span
+      className={`world-lock-decoration ${isCelebrating ? "is-celebrating" : ""}`}
+      aria-hidden="true"
+    >
+      <Chain isReversed={false} />
+      <Chain isReversed />
+      <Image
+        className="world-padlock world-padlock-closed"
+        src="/assets/map/padlock-closed.webp"
+        alt=""
+        width={192}
+        height={192}
+      />
+      {isCelebrating && (
+        <Image
+          className="world-padlock world-padlock-open"
+          src="/assets/map/padlock-open.webp"
+          alt=""
+          width={192}
+          height={192}
+        />
+      )}
+    </span>
+  );
+}
 
 export function Hub() {
   const router = useRouter();
@@ -42,6 +171,34 @@ export function Hub() {
   const [view, setView] = useState<"games" | "map" | "stars">("games");
   const [pendingWorld, setPendingWorld] = useState<WorldId | null>(null);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [unlockQueue, setUnlockQueue] = useState<WorldId[]>([]);
+  const observedStars = state?.stars;
+  useEffect(() => {
+    if (observedStars === undefined || isAdminMode) return;
+    const frame = requestAnimationFrame(() =>
+      setUnlockQueue(trackWorldUnlocks(observedStars)),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [observedStars, isAdminMode]);
+  const celebratingWorld =
+    view === "map" && !isAdminMode && unlockQueue.length
+      ? getWorld(unlockQueue[0])
+      : null;
+  useEffect(() => {
+    if (!celebratingWorld) return;
+    const timer = window.setTimeout(
+      () => {
+        acknowledgeWorldUnlock(celebratingWorld.id);
+        setUnlockQueue((queue) =>
+          queue.filter((id) => id !== celebratingWorld.id),
+        );
+      },
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        ? 1200
+        : 5000,
+    );
+    return () => window.clearTimeout(timer);
+  }, [celebratingWorld]);
   const stars = state?.stars ?? 0;
   const nextWorld = worlds.find((world) => world.starsRequired > stars);
   const hasActiveSession = state?.session?.phase === "playing";
@@ -344,6 +501,7 @@ export function Hub() {
                         height={768}
                         sizes="(max-width: 720px) 20vw, 280px"
                       />
+                      {!isUnlocked && <LockDecoration />}
                       <span className="island-label">
                         {!isUnlocked && <LockKeyhole />}
                         {world.shortName}
@@ -457,6 +615,34 @@ export function Hub() {
             </Button>
           </section>
         </>
+      )}
+      {celebratingWorld && (
+        <div
+          className="world-unlock-celebration"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="world-unlock-showcase">
+            <Image
+              src={artwork.islands[celebratingWorld.id]}
+              alt=""
+              width={768}
+              height={768}
+            />
+            <LockDecoration isCelebrating />
+          </div>
+          <strong>{celebratingWorld.shortName} unlocked!</strong>
+          <Button
+            onClick={() => {
+              acknowledgeWorldUnlock(celebratingWorld.id);
+              setUnlockQueue((queue) =>
+                queue.filter((id) => id !== celebratingWorld.id),
+              );
+            }}
+          >
+            Continue exploring
+          </Button>
+        </div>
       )}
       <footer className="scene-footer">
         <span>

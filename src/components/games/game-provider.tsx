@@ -218,6 +218,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
               input.gameId,
               input.worldId,
               input.mode,
+              Date.now(),
+              input.sceneIndex,
             ),
           );
         }

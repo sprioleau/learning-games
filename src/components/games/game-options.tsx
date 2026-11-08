@@ -94,6 +94,19 @@ export function GameOptionsPanel() {
                   }
                 />
               </label>
+              <label className="setting-row" htmlFor="background-music">
+                <span>
+                  <strong>Background music</strong>
+                  <small>A gentle tune throughout your adventure</small>
+                </span>
+                <Switch
+                  id="background-music"
+                  checked={draft.isMusicEnabled}
+                  onCheckedChange={(isMusicEnabled) =>
+                    setDraft({ ...draft, isMusicEnabled })
+                  }
+                />
+              </label>
               <label className="setting-row" htmlFor="celebrations">
                 <span>
                   <strong>Celebration animations</strong>

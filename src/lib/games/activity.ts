@@ -72,6 +72,7 @@ export function createActivitySession(
   worldId: string,
   mode: ActivityMode,
   now = Date.now(),
+  sceneIndex = 0,
 ): ActivitySession {
   let questions: ActivitySession["questions"];
   if (gameId === "number-trail") {
@@ -95,7 +96,7 @@ export function createActivitySession(
     questions = Array.from({ length: size.rows * size.columns }, (_, id) => ({
       prompt: `Piece ${id + 1}`,
       answer: id,
-      payload: "{}",
+      payload: JSON.stringify({ sceneIndex }),
     }));
   } else if (gameId === "word-builder") {
     if (mode !== "default") throw new Error("Invalid activity mode");

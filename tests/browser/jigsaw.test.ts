@@ -33,6 +33,7 @@ describe("Jungle Jigsaw", () => {
       await page.evaluate(() => {
         Math.random = () => 0.5;
       });
+      await page.getByRole("button", { name: "Jungle Friends" }).click();
       await page.getByRole("button", { name: "Open puzzle box" }).click();
       const canvas = page.getByRole("img", {
         name: "Jungle puzzle board and scattered pieces",
@@ -60,6 +61,14 @@ describe("Jungle Jigsaw", () => {
         .filter({ hasText: "A piece found its place!" })
         .waitFor();
       expect(await page.getByText("1 / 9 pieces").isVisible()).toBe(true);
+      await page.reload();
+      await page.getByText("1 / 9 pieces").waitFor();
+      await page.getByRole("button", { name: "New puzzle" }).click();
+      expect(
+        await page
+          .getByRole("button", { name: "Jungle Friends" })
+          .getAttribute("aria-pressed"),
+      ).toBe("true");
       await page.reload();
       await page.getByText("1 / 9 pieces").waitFor();
       await page.getByRole("button", { name: "Keyboard controls" }).click();

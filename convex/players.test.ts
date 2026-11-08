@@ -287,8 +287,13 @@ describe("server-authoritative learning activities", () => {
         gameId: "jigsaw",
         mode: "3x3",
         worldId: "jungle",
+        sceneIndex: 2,
       }),
     });
+    expect(
+      JSON.parse(result.state.activitySessions[0].questions[0].payload)
+        .sceneIndex,
+    ).toBe(2);
     let revision = 0;
     let lastCommand = "";
     for (const piece of [8, 0, 4, 7, 2, 3, 1, 6, 5]) {
@@ -308,6 +313,13 @@ describe("server-authoritative learning activities", () => {
     expect(result.outcome).toBe("won");
     expect(result.state.stars).toBe(1);
     expect(result.state.points).toBe(100);
+    const saved = await t.query(app.api.players.load, {
+      secret,
+      keyHash: "puzzle-player",
+    });
+    expect(
+      JSON.parse(saved.activitySessions![0].questions[0].payload).sceneIndex,
+    ).toBe(2);
     const retry = await t.mutation(app.api.players.command, {
       ...base,
       command: lastCommand,
